@@ -298,6 +298,27 @@
   else { opts.ink-dark }
 }
 
+// The words of a label, provided it consists of text only; otherwise
+// `none`. Needed to know the width of the longest word: a box must not
+// shrink below it, or the word sticks out.
+#let _words(c) = {
+  if type(c) == str { return c.split() }
+  if type(c) != content { return none }
+  if c.func() == text { return c.text.split() }
+  if c.func() == [ ].func() { return () }
+  if c.func() == [].func() {
+    let out = ()
+    for p in c.children {
+      let w = _words(p)
+      if w == none { return none }
+      out += w
+    }
+    return out
+  }
+  if c.has("body") { return _words(c.body) }
+  none
+}
+
 // Everything the theme and the node decide about a box: fill, border,
 // radius, shape, fixed size, text colour and weight. Shared by the box
 // itself and by the hand-drawn outline, so both agree.
@@ -352,11 +373,30 @@
   if p.shape == "rect" {
     box(width: width, fill: fill, stroke: stroke, radius: p.radius, inset: opts.inset, body)
   } else if p.size != none {
-    // Fixed diameter: the text wraps inside and is centred.
+    // Fixed diameter: the text wraps inside and is centred. If it does not
+    // fit, the font shrinks step by step to 60%; if that is still not
+    // enough, the shape grows rather than letting the text spill out.
     let d = p.size
-    let inner = box(width: if p.shape == "circle" { d * 0.72 } else { d * 0.8 }, align(center, body))
-    if p.shape == "circle" { circle(radius: d / 2, fill: fill, stroke: stroke, inset: 0pt, align(center + horizon, inner)) }
-    else { ellipse(width: d, height: d * 0.62, fill: fill, stroke: stroke, inset: 0pt, align(center + horizon, inner)) }
+    let words = _words(node.label)
+    context {
+      let d = d.to-absolute()
+      let inner-w = if p.shape == "circle" { d * 0.72 } else { d * 0.8 }
+      let inner-h = if p.shape == "circle" { d * 0.72 } else { d * 0.62 * 0.8 }
+      let s = 1.0
+      let fits(s) = {
+        let m = measure(box(width: inner-w, align(center, text(size: s * 1em, body))))
+        let widest = if words == none { 0pt } else {
+          words.map(w => measure(text(weight: p.weight, size: s * 1em * scale, w)).width).fold(0pt, calc.max)
+        }
+        m.height <= inner-h and widest <= inner-w
+      }
+      while s > 0.6 and not fits(s) { s -= 0.1 }
+      let m = measure(box(width: inner-w, align(center, text(size: s * 1em, body))))
+      let grow = calc.max(1.0, m.height / inner-h)
+      let inner = box(width: inner-w, align(center, text(size: s * 1em, body)))
+      if p.shape == "circle" { circle(radius: d * grow / 2, fill: fill, stroke: stroke, inset: 0pt, align(center + horizon, inner)) }
+      else { ellipse(width: d * grow, height: d * 0.62 * grow, fill: fill, stroke: stroke, inset: 0pt, align(center + horizon, inner)) }
+    }
   } else {
     let inner = align(center + horizon, box(width: width, align(center, body)))
     if p.shape == "circle" { circle(fill: fill, stroke: stroke, inset: opts.inset, inner) }
@@ -499,27 +539,6 @@
   let st = if paint.stroke == none { none } else { paint.stroke }
   if st == none and paint.fill == none { return }
   _hand-line(pts, st, opts.theme.hand, _seed(_pt(cx), _pt(cy), w, h), closed: true, fill: paint.fill)
-}
-
-// The words of a label, provided it consists of text only; otherwise
-// `none`. Needed to know the width of the longest word: a box must not
-// shrink below it, or the word sticks out.
-#let _words(c) = {
-  if type(c) == str { return c.split() }
-  if type(c) != content { return none }
-  if c.func() == text { return c.text.split() }
-  if c.func() == [ ].func() { return () }
-  if c.func() == [].func() {
-    let out = ()
-    for p in c.children {
-      let w = _words(p)
-      if w == none { return none }
-      out += w
-    }
-    return out
-  }
-  if c.has("body") { return _words(c.body) }
-  none
 }
 
 // Measures a node. If the label is wider than `max-width` it wraps; a

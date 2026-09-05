@@ -299,8 +299,9 @@ weiterhin aus der Palette. Zehn sind eingebaut:
 
 Das Theme-Feld `shape` macht aus den Kästen Kreise oder Ellipsen; `size`
 gibt je Tiefe einen festen Durchmesser vor, wie bei einem Bubble Tree.
-Kreise passen zu kurzen Beschriftungen, ein langes Wort macht den Kreis
-groß. `shade` stuft die Astfarbe je Ebene ab.
+Bei festem Durchmesser schrumpft die Schrift bis auf 60 Prozent, damit der
+Text hineinpasst; reicht das nicht, wächst der Kreis. Ohne `size` passen
+Kreise zu kurzen Beschriftungen, ein langes Wort macht den Kreis groß. `shade` stuft die Astfarbe je Ebene ab.
 
 #show-example(
   rendered: {

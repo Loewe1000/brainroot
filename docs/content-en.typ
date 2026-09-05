@@ -295,8 +295,9 @@ palette. Ten are built in:
 == Shapes
 
 The theme field `shape` turns the boxes into circles or ellipses; `size`
-gives a fixed diameter per depth, as in a bubble tree. Circles suit short
-labels, a long word makes a large disc. `shade` steps the branch colour per
+gives a fixed diameter per depth, as in a bubble tree. With a fixed diameter the
+font shrinks to 60% so the text fits; if that is not enough the disc grows.
+Without `size`, circles suit short labels, a long word makes a large disc. `shade` steps the branch colour per
 level.
 
 #show-example(
