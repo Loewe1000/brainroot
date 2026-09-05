@@ -53,7 +53,7 @@ Everything that shapes a map sits on one of four levels:
 - **Layout** and **spacing**: `layout: "radial"` or
   `(kind: "radial", start: 90deg, align-levels: false)`; `spacing: (level: 3.5em,
   root: 6em, sibling: 0.7em, branch: 2em, max-width: 14em, brace: 0.6em,
-  summary: 0.5em, cloud: 0.6em, label: 0.9em, padding: 1em)`, all optional.
+  summary: 0.5em, cloud: 0.6em, label: 0.25em, padding: 1em)`, all optional.
 - **Nodes**, `branch(label, ..kids, ...)`, the root included:
   `title: branch([Energy], icon: emoji.bolt, fill: navy)`.
 

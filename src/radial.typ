@@ -1,7 +1,7 @@
 // The layouts that are not trees: star, radial and fishbone.
 
 #import "@preview/cetz:0.4.2"
-#import "draw.typ": _stroke, _path, _seg, _root-edge, _draw-tree, _draw-node, _edge-label, _mid, _bez
+#import "draw.typ": _stroke, _path, _seg, _root-edge, _draw-tree, _draw-node, _edge-label, _edge-label-beside, _mid, _bez
 #import "layout.typ": _leaves, _weight, _sectors, _level-sizes
 
 // Star: every branch gets an angle, its box sits on a circle around the
@@ -59,10 +59,10 @@
       let cx = px + d * t.w / 2
       let ty = if py < 0pt { py + t.h / 2 } else { py - t.h / 2 }
       _path((0pt, 0pt), (0pt, ty / 2), (cx, ty / 2), (cx, ty), st, opts)
-      _edge-label(_mid((0pt, 0pt), (0pt, ty / 2), (cx, ty / 2), (cx, ty)), t.node.edge-label, opts)
+      _edge-label-beside((0pt, 0pt), (0pt, ty / 2), (cx, ty / 2), (cx, ty), (1, 0), t.node.edge-label, opts)
     } else {
       let ay = if opts.theme.underline { py - t.size-u / 2 } else { py }
-      _root-edge((px, ay), px - d * opts.root-gap / 2, st, opts, false, label: t.node.edge-label)
+      _root-edge((px, ay), px - d * opts.root-gap / 2, st, opts, false, label: t.node.edge-label, du: -py)
     }
     _draw-tree(t, px, -py, d, opts, false)
   }
@@ -127,7 +127,8 @@
        (p.at(0) - d * calc.cos(t.angle), p.at(1) - d * calc.sin(t.angle)))
     } else { (parent, p) }
     _path(parent, c0, c1, p, st, opts)
-    _edge-label(_bez(parent, c0, c1, p, 0.6), t.node.edge-label, opts)
+    // Beside the edge, on the side that faces up.
+    _edge-label-beside(parent, c0, c1, p, (0, 1), t.node.edge-label, opts, t: 0.6)
     for k in t.kids { draw(k, p, t.angle) }
   }
   let shown = placed.filter(t => not t.at("hidden", default: false))
@@ -186,7 +187,7 @@
         let at = (sx - l * f * calc.cos(lean), side * l * f * calc.sin(lean))
         let end = (at.at(0) - tick, at.at(1))
         _seg(at, end, _stroke(kid.depth - 1, kid.color, opts), opts)
-        _edge-label(((at.at(0) + end.at(0)) / 2, at.at(1)), kid.node.edge-label, opts)
+        _edge-label-beside(at, at, end, end, (0, side), kid.node.edge-label, opts, t: 0.5)
         _draw-node(kid, end.at(0) - kid.w / 2, end.at(1), opts)
       }
       _draw-node(t, tip.at(0), tip.at(1) + side * t.h / 2, opts)

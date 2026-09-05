@@ -17,13 +17,13 @@
 /// its branches (the first ring in `radial` and `star`). Across it:
 /// `sibling` between siblings, `branch` between the first-level branches.
 /// `max-width` wraps longer labels. `brace` and `summary` size a summary
-/// brace and its gaps, `cloud` pads a cloud, `label` lifts an edge label off
-/// its edge, `padding` frames a coloured background. Lengths in `em` follow the font size around the map.
+/// brace and its gaps, `cloud` pads a cloud, `label` is the gap between an edge
+/// label and its edge, `padding` frames a coloured background. Lengths in `em` follow the font size around the map.
 ///
 /// -> dictionary
 #let spacing-defaults = (
   level: 3.5em, root: 6em, sibling: 0.7em, branch: 2em, max-width: 14em,
-  brace: 0.6em, summary: 0.5em, cloud: 0.6em, label: 0.9em, padding: 1em,
+  brace: 0.6em, summary: 0.5em, cloud: 0.6em, label: 0.25em, padding: 1em,
 )
 
 #let _layout(l) = {

@@ -113,25 +113,50 @@
 }
 #let _mid(p0, c0, c1, p1) = _bez(p0, c0, c1, p1, 0.5)
 
-// Where the label of an edge goes: past the middle, where the edges of
-// siblings have fanned apart, and shifted across the direction of growth
-// away from the parent's axis, so the labels of neighbouring edges do not
-// meet. `du` is the child's offset on the cross axis.
-#let _label-at(p0, c0, c1, p1, du, opts, vertical) = {
-  let p = _bez(p0, c0, c1, p1, 0.68)
-  let away = if du < 0pt { -1 } else { 1 }
-  let off = opts.label-offset
-  if vertical { (p.at(0) + away * off, p.at(1)) } else { (p.at(0), p.at(1) - away * off) }
+// The tangent of an edge at t.
+#let _tangent(p0, c0, c1, p1, t) = {
+  let u = 1 - t
+  let (a, b, c) = (3 * u * u, 6 * u * t, 3 * t * t)
+  (a * (c0.at(0) - p0.at(0)) + b * (c1.at(0) - c0.at(0)) + c * (p1.at(0) - c1.at(0)),
+   a * (c0.at(1) - p0.at(1)) + b * (c1.at(1) - c0.at(1)) + c * (p1.at(1) - c1.at(1)))
 }
 
-// A small label sitting on an edge.
+// The label box of an edge.
+#let _label-box(label, opts) = box(fill: opts.edge-label-fill, inset: 0.25em, radius: 0.2em,
+  text(size: 0.85em, fill: opts.ink-dark, top-edge: "bounds", bottom-edge: "bounds", label))
+
+// A label beside an edge: well past the middle, near the child, where the
+// edges of siblings have fanned apart, and moved off the edge along its normal by half the
+// label's extent in that direction plus a gap, so it neither covers nor
+// touches the line. Of the two normals the one closer to `prefer` is
+// taken -- away from the parent's axis, so neighbouring labels part.
+#let _edge-label-beside(p0, c0, c1, p1, prefer, label, opts, t: 0.8) = {
+  import cetz.draw: content
+  if label == none { return }
+  let bx = _label-box(label, opts)
+  let m = measure(bx)
+  let p = _bez(p0, c0, c1, p1, t)
+  let (dx, dy) = _tangent(p0, c0, c1, p1, t).map(_pt)
+  let len = calc.max(calc.sqrt(dx * dx + dy * dy), 1e-9)
+  let (nx, ny) = (-dy / len, dx / len)
+  if nx * prefer.at(0) + ny * prefer.at(1) < 0 { (nx, ny) = (-nx, -ny) }
+  let d = calc.abs(nx) * m.width / 2 + calc.abs(ny) * m.height / 2 + opts.label-offset
+  content((p.at(0) + nx * d, p.at(1) + ny * d), bx)
+}
+
+// A small label sitting on an edge, at a given point.
 #let _edge-label(at, label, opts) = {
   import cetz.draw: content
   if label == none { return }
-  // Edges "bounds": a fraction reaches above and below the line's usual
-  // cap height and baseline, and the box has to cover all of it.
-  content(at, box(fill: opts.edge-label-fill, inset: 0.25em, radius: 0.2em,
-    text(size: 0.85em, fill: opts.ink-dark, top-edge: "bounds", bottom-edge: "bounds", label)))
+  content(at, _label-box(label, opts))
+}
+
+// The side of an edge a label prefers: across the direction of growth,
+// away from the parent's axis. `du` is the child's offset on the cross
+// axis (positive downwards in horizontal layouts).
+#let _prefer(du, vertical) = {
+  let away = if du < 0pt { -1 } else { 1 }
+  if vertical { (away, 0) } else { (0, -away) }
 }
 
 // Draws one node's box centred at (cx, cy), with its underline if the theme
@@ -229,7 +254,7 @@
       let p0 = _xy(ms, anchor(k, ku), vertical)
       let p1 = _xy(m1, anchor(k, ku), vertical)
       _seg(p0, p1, _stroke(k.depth - 1, k.color, opts), opts)
-      _edge-label(((p0.at(0) + p1.at(0)) / 2, (p0.at(1) + p1.at(1)) / 2), k.node.edge-label, opts)
+      _edge-label-beside(p0, p0, p1, p1, _prefer(k.du, vertical), k.node.edge-label, opts, t: 0.5)
       _draw-tree(k, m1, ku, dir, opts, vertical)
     }
   } else {
@@ -239,7 +264,7 @@
       let p1 = _xy(m1, anchor(k, ku), vertical)
       let (c0, c1) = _controls(p0, p1, vertical)
       _path(p0, c0, c1, p1, _stroke(k.depth - 1, k.color, opts), opts)
-      _edge-label(_label-at(p0, c0, c1, p1, k.du, opts, vertical), k.node.edge-label, opts)
+      _edge-label-beside(p0, c0, c1, p1, _prefer(k.du, vertical), k.node.edge-label, opts)
       _draw-tree(k, m1, ku, dir, opts, vertical)
     }
   }
@@ -266,7 +291,7 @@
 #let _root-edge(p1, m-inner, st, opts, vertical, label: none, du: 0pt) = {
   let (c0, c1) = _root-controls(p1, m-inner, opts, vertical)
   _path((0pt, 0pt), c0, c1, p1, st, opts)
-  _edge-label(_label-at((0pt, 0pt), c0, c1, p1, du, opts, vertical), label, opts)
+  _edge-label-beside((0pt, 0pt), c0, c1, p1, _prefer(du, vertical), label, opts)
 }
 
 // Stacks branches on u, centred around 0, and draws them with their root edge.
