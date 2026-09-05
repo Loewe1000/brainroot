@@ -7,15 +7,20 @@
 // languages. The content sits in `content-en.typ`; the German manual is
 // `docs.typ` with `content.typ`.
 
-#import "@schule/schuldocs:0.2.0": *
+#import "@schule/schuldocs:0.3.0": *
 
 #set text(lang: "en")
 
 #show: docs.with(
   toml: toml("../typst.toml"),
+  // The logo instead of the name in the header, as SVG: Typst turns the
+  // text into paths on export, so it hangs on no font. The web header is
+  // one line and takes it small; the PDF title page has the room for it.
+  logo: context image("../assets/logo.svg", alt: "brainroot",
+    height: if target() == "html" { 1.7em } else { 4.5em }),
   html-name: "en.html",
   pdf-name: "brainroot-en.pdf",
-  abstract: [The `brainroot` package draws two-sided mind maps: the root in the middle, coloured branches to the right and left, leaves to any depth. The layout is automatic.],
+  abstract: [The `brainroot` package draws mind maps from nested lists: coloured branches down to the leaves, seven layouts from two-sided to radial, twelve themes with a hand-drawn mode, maps with gaps and their solution. The layout is automatic.],
   links: (
     (name: "GitHub", url: "https://github.com/Loewe1000/brainroot"),
     (name: "Deutsch", url: "index.html"),
