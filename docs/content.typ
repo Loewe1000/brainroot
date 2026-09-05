@@ -1,12 +1,5 @@
 #import "@schule/schuldocs:0.2.0": show-example, show-module, show-code
 
-// Examples sit in a 14 cm frame on the website; wider maps are scaled down
-// to fit instead of being cut off.
-#let fit(body, max: 13.6cm) = context {
-  let m = measure(body)
-  let f = calc.min(1, max / m.width)
-  scale(f * 100%, reflow: true, body)
-}
 
 = Über dieses Paket
 
@@ -30,10 +23,10 @@ Die einfachste Eingabe ist eine Liste: jeder Punkt wird zu einem Knoten,
 eingerückte Punkte zu seinen Kindern.
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Energiearten])[
+    brainroot(width: 100%, title: [Energiearten])[
       - Bewegungsenergie
         - Kinetische Energie
         - Windenergie
@@ -45,7 +38,7 @@ eingerückte Punkte zu seinen Kindern.
         - Schwerkraftenergie
         - Gewichtenergie
     ]
-  }),
+  },
   source: ```typ
 #brainroot(title: [Energiearten])[
   - Bewegungsenergie
@@ -76,15 +69,15 @@ die übrigen nach links. `side: left` oder `side: right` legt einen Ast fest,
 `color` gibt ihm eine eigene Farbe statt der nächsten aus der Palette.
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot([Fotosynthese], root-fill: green.lighten(50%), max-width: 3cm,
+    brainroot(width: 100%, [Fotosynthese], root-fill: green.lighten(50%), max-width: 3cm,
       branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten]), [ATP], side: right),
       branch([Dunkelreaktion], [Calvin-Zyklus], [Glucose], color: purple),
       branch([Voraussetzungen], [Licht], [Wasser], [CO₂], side: left),
     )
-  }),
+  },
   source: ```typ
 #brainroot([Fotosynthese], root-fill: green.lighten(50%), max-width: 3cm,
   branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten]), [ATP], side: right),
@@ -117,11 +110,11 @@ waagerecht nach außen.
 ]
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Energiearten], layout: "down", karte)
-  }),
+    brainroot(width: 100%, title: [Energiearten], layout: "down", karte)
+  },
   source: ```typ
 #brainroot(title: [Energiearten], layout: "down", karte)
   ```,
@@ -129,12 +122,12 @@ waagerecht nach außen.
 )
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Energiearten], layout: "radial", karte,
+    brainroot(width: 100%, title: [Energiearten], layout: "radial", karte,
       branch([Druckenergie]), branch([Strahlungsenergie], [Lichtenergie]))
-  }),
+  },
   source: ```typ
 #brainroot(title: [Energiearten], layout: "radial", karte,
   branch([Druckenergie]), branch([Strahlungsenergie], [Lichtenergie]))
@@ -168,11 +161,11 @@ Karte gezeigt:
   == #raw(name)
   #beschreibung
   #show-example(
-    rendered: fit({
+    rendered: {
       import "../lib.typ": *
       set text(size: 8pt)
-      brainroot(title: [Energiearten], palette: name, karte)
-    }),
+      brainroot(width: 100%, title: [Energiearten], palette: name, karte)
+    },
     source: raw(lang: "typ", "#brainroot(title: [Energiearten], palette: \"" + name + "\", karte)"),
     width: 100%,
   )
@@ -202,11 +195,11 @@ weiterhin aus der Palette. Zehn sind eingebaut:
   == #raw(name)
   #beschreibung
   #show-example(
-    rendered: fit({
+    rendered: {
       import "../lib.typ": *
       set text(size: 8pt)
-      brainroot(title: [Energiearten], theme: name, karte)
-    }),
+      brainroot(width: 100%, title: [Energiearten], theme: name, karte)
+    },
     source: raw(lang: "typ", "#brainroot(title: [Energiearten], theme: \"" + name + "\", karte)"),
     width: 100%,
   )
@@ -229,13 +222,13 @@ reiner Sinus), `segment` (Schrittweite in pt) und `passes` (wie oft jede
 Linie gezogen wird). Jedes Theme lässt sich damit handgezeichnet machen:
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt, font: "Patrick Hand")
-    brainroot(title: [Energiearten],
+    brainroot(width: 100%, title: [Energiearten],
       theme: (base: "blocks", hand: (amplitude: 1, wavelength: 60, randomness: 2, segment: 1.5, passes: 1)),
       karte)
-  }),
+  },
   source: ```typ
 #set text(font: "Patrick Hand")
 #brainroot(title: [Energiearten],
@@ -254,12 +247,12 @@ sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`),
 die Wurzel. `layout` legt alle Äste auf eine Seite.
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Energiearten], layout: "right",
+    brainroot(width: 100%, title: [Energiearten], layout: "right",
       theme: (base: "outline", edge: "elbow", radius: 0pt), karte)
-  }),
+  },
   source: ```typ
 #brainroot(title: [Energiearten], layout: "right",
   theme: (base: "outline", edge: "elbow", radius: 0pt), karte)

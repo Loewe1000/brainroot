@@ -1,12 +1,5 @@
 #import "@schule/schuldocs:0.2.0": show-example, show-module, show-code
 
-// Examples sit in a 14 cm frame on the website; wider maps are scaled down
-// to fit instead of being cut off.
-#let fit(body, max: 13.6cm) = context {
-  let m = measure(body)
-  let f = calc.min(1, max / m.width)
-  scale(f * 100%, reflow: true, body)
-}
 
 = About this package
 
@@ -29,10 +22,10 @@ The simplest input is a list: every item becomes a node, indented items its
 children.
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Forms of energy])[
+    brainroot(width: 100%, title: [Forms of energy])[
       - Kinetic energy
         - Motion
         - Wind
@@ -44,7 +37,7 @@ children.
         - Gravity
         - Weight
     ]
-  }),
+  },
   source: ```typ
 #brainroot(title: [Forms of energy])[
   - Kinetic energy
@@ -75,15 +68,15 @@ the rest go left. `side: left` or `side: right` pins a branch, `color` gives
 it its own colour instead of the next one from the palette.
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot([Photosynthesis], root-fill: green.lighten(50%), max-width: 3cm,
+    brainroot(width: 100%, [Photosynthesis], root-fill: green.lighten(50%), max-width: 3cm,
       branch([Light reaction], branch([Photolysis], [Water is split]), [ATP], side: right),
       branch([Dark reaction], [Calvin cycle], [Glucose], color: purple),
       branch([Requirements], [Light], [Water], [CO₂], side: left),
     )
-  }),
+  },
   source: ```typ
 #brainroot([Photosynthesis], root-fill: green.lighten(50%), max-width: 3cm,
   branch([Light reaction], branch([Photolysis], [Water is split]), [ATP], side: right),
@@ -116,11 +109,11 @@ horizontally outward.
 ]
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Forms of energy], layout: "down", map)
-  }),
+    brainroot(width: 100%, title: [Forms of energy], layout: "down", map)
+  },
   source: ```typ
 #brainroot(title: [Forms of energy], layout: "down", map)
   ```,
@@ -128,12 +121,12 @@ horizontally outward.
 )
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Forms of energy], layout: "radial", map,
+    brainroot(width: 100%, title: [Forms of energy], layout: "radial", map,
       branch([Pressure]), branch([Radiation], [Light]))
-  }),
+  },
   source: ```typ
 #brainroot(title: [Forms of energy], layout: "radial", map,
   branch([Pressure]), branch([Radiation], [Light]))
@@ -167,11 +160,11 @@ with the same map:
   == #raw(name)
   #description
   #show-example(
-    rendered: fit({
+    rendered: {
       import "../lib.typ": *
       set text(size: 8pt)
-      brainroot(title: [Forms of energy], palette: name, map)
-    }),
+      brainroot(width: 100%, title: [Forms of energy], palette: name, map)
+    },
     source: raw(lang: "typ", "#brainroot(title: [Forms of energy], palette: \"" + name + "\", map)"),
     width: 100%,
   )
@@ -201,11 +194,11 @@ palette. Ten are built in:
   == #raw(name)
   #description
   #show-example(
-    rendered: fit({
+    rendered: {
       import "../lib.typ": *
       set text(size: 8pt)
-      brainroot(title: [Forms of energy], theme: name, map)
-    }),
+      brainroot(width: 100%, title: [Forms of energy], theme: name, map)
+    },
     source: raw(lang: "typ", "#brainroot(title: [Forms of energy], theme: \"" + name + "\", map)"),
     width: 100%,
   )
@@ -228,13 +221,13 @@ pure sine), `segment` (step in pt) and `passes` (how often each line is
 drawn). Any theme can be made hand-drawn with it:
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt, font: "Patrick Hand")
-    brainroot(title: [Forms of energy],
+    brainroot(width: 100%, title: [Forms of energy],
       theme: (base: "blocks", hand: (amplitude: 1, wavelength: 60, randomness: 2, segment: 1.5, passes: 1)),
       map)
-  }),
+  },
   source: ```typ
 #set text(font: "Patrick Hand")
 #brainroot(title: [Forms of energy],
@@ -253,12 +246,12 @@ otherwise `soft`. Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`),
 only. `layout` puts all branches on one side.
 
 #show-example(
-  rendered: fit({
+  rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(title: [Forms of energy], layout: "right",
+    brainroot(width: 100%, title: [Forms of energy], layout: "right",
       theme: (base: "outline", edge: "elbow", radius: 0pt), map)
-  }),
+  },
   source: ```typ
 #brainroot(title: [Forms of energy], layout: "right",
   theme: (base: "outline", edge: "elbow", radius: 0pt), map)
