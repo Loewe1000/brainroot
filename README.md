@@ -62,11 +62,13 @@ as arguments.
 - `ink`: text colour. Default: `auto`, then the fill's luminance decides between `ink-dark` (black) and `ink-light` (white); `ink-threshold` (0.55) is the boundary.
 - `scale`: font size per level relative to the surroundings. Default: `(1.3, 1.1, 1.0)`.
 - `bold-depth`: this many levels from the root are bold. Default: `2`.
-- `thickness`: line width per level. Default: `(3pt, 1.5pt)`.
-- `level-gap`, `root-gap`: distances along the direction of growth, parent to child and root to branch. Default: `40pt`, `80pt`.
-- `sibling-gap`, `branch-gap`: distances across, between siblings and between first-level branches. Default: `8pt`, `24pt`.
-- `max-width`: labels wider than this wrap. Default: `5cm`.
-- `inset`: padding of the boxes.
+- `thickness`: line width per level. Default: `(0.27em, 0.14em)`.
+- `level-gap`, `root-gap`: distances along the direction of growth, parent to child and root to branch. Default: `3.5em`, `6em`.
+- `sibling-gap`, `branch-gap`: distances across, between siblings and between first-level branches. Default: `0.7em`, `2em`.
+- `max-width`: labels wider than this wrap. Default: `14em`.
+- `inset`: padding of the boxes. Default: `(x: 0.9em, y: 0.55em)`.
+
+All lengths may be given in `em`; the defaults are, so a map follows the font size around it.
 
 ## Layouts
 

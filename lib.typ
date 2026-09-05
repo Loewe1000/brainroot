@@ -774,6 +774,7 @@
 /// - bold-depth: levels (from the root) set in bold.
 /// - thickness: line width per level of connection (root→branch,
 ///   branch→leaf, ...); the last value holds for all deeper levels.
+///   All lengths may be given in `em`; they then follow the font size.
 /// - level-gap: distance between parent and child box along the direction
 ///   of growth.
 /// - root-gap: distance between root and branches; with `radial` the
@@ -799,14 +800,24 @@
   ink-threshold: 0.55,
   scale: (1.3, 1.1, 1.0),
   bold-depth: 2,
-  thickness: (3pt, 1.5pt),
-  level-gap: 40pt,
-  root-gap: 80pt,
-  sibling-gap: 8pt,
-  branch-gap: 24pt,
-  max-width: 5cm,
-  inset: (x: 10pt, y: 6pt),
+  thickness: (0.27em, 0.14em),
+  level-gap: 3.5em,
+  root-gap: 6em,
+  sibling-gap: 0.7em,
+  branch-gap: 2em,
+  max-width: 14em,
+  inset: (x: 0.9em, y: 0.55em),
 ) = context {
+  // Lengths in em follow the surrounding font size, so a map in a footnote
+  // and a map on a poster keep their proportions. Resolve them once here.
+  let abs(l) = if type(l) == length { l.to-absolute() } else { l }
+  let level-gap = abs(level-gap)
+  let root-gap = abs(root-gap)
+  let sibling-gap = abs(sibling-gap)
+  let branch-gap = abs(branch-gap)
+  let max-width = abs(max-width)
+  let thickness = thickness.map(abs)
+  let inset = if type(inset) == dictionary { inset.pairs().map(((k, v)) => (k, abs(v))).to-dict() } else { abs(inset) }
   let layouts = ("both", "right", "left", "down", "up", "radial")
   assert(layout in layouts, message: "brainroot: layout must be one of " + layouts.join(", "))
   let vertical = layout in ("down", "up")
