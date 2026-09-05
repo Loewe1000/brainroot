@@ -283,6 +283,9 @@ only. `layout` puts all branches on one side.
   across (between siblings, between first-level branches).
 - `max-width` limits the width of a label; longer text wraps. `none` never
   wraps.
+- `width` scales the finished map, text included, to a width given as a
+  length or as a share of the surrounding block (`width: 100%`); `zoom` is a
+  factor on top. Both change only the size, never the layout.
 - `inset` is the padding of the boxes.
 
 = Functions

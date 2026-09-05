@@ -68,6 +68,9 @@ as arguments.
 - `max-width`: labels wider than this wrap. Default: `14em`.
 - `inset`: padding of the boxes. Default: `(x: 0.9em, y: 0.55em)`.
 
+- `width`: `auto` for the natural size, or a length or ratio of the surrounding block to scale the whole map to, text included.
+- `zoom`: a factor on the whole map, on top of `width`. Default: `100%`.
+
 All lengths may be given in `em`; the defaults are, so a map follows the font size around it.
 
 ## Layouts

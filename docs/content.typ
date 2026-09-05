@@ -284,6 +284,9 @@ die Wurzel. `layout` legt alle Äste auf eine Seite.
   (zwischen Geschwistern, zwischen den Ästen der ersten Ebene).
 - `max-width` begrenzt die Breite einer Beschriftung; längerer Text wird
   umgebrochen. `none` bricht nie um.
+- `width` skaliert die fertige Karte samt Schrift auf eine Breite, als Länge
+  oder als Anteil des umgebenden Blocks (`width: 100%`); `zoom` ist ein
+  Faktor obendrauf. Beide ändern nur die Größe, nie das Layout.
 - `inset` ist der Innenabstand der Kästen.
 
 = Funktionen

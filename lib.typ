@@ -783,6 +783,11 @@
 /// - branch-gap: distance between the first-level branches.
 /// - max-width: labels wider than this wrap; `none` never wraps.
 /// - inset: padding of the boxes.
+/// - width: `auto` draws the map at its natural size; a length or a ratio
+///   (of the surrounding block) scales the whole map, text included, to
+///   that width.
+/// - zoom: a factor on the whole map, applied on top of `width`;
+///   `zoom: 50%` halves it.
 #let brainroot(
   ..branches,
   title: none,
@@ -807,6 +812,8 @@
   branch-gap: 2em,
   max-width: 14em,
   inset: (x: 0.9em, y: 0.55em),
+  width: auto,
+  zoom: 100%,
 ) = context {
   // Lengths in em follow the surrounding font size, so a map in a footnote
   // and a map on a poster keep their proportions. Resolve them once here.
@@ -850,7 +857,7 @@
     _measure-tree(b, 1, c, opts, vertical)
   })
 
-  cetz.canvas(length: 1pt, {
+  let canvas = cetz.canvas(length: 1pt, {
     import cetz.draw: *
     if layout == "radial" {
       _draw-radial(trees, rm, start, opts)
@@ -866,5 +873,15 @@
     // The root last, so it lies on top of the lines.
     if opts.theme.hand != none { _hand-shape(0pt, 0pt, rm, 0, black, opts) }
     content((0, 0), _framed(rm, _nodebox(root-node, 0, black, opts, width: rm.width)))
+  })
+
+  if width == auto and zoom == 100% { return canvas }
+  // Scale the finished drawing as a whole, text included, so `width` and
+  // `zoom` never change the layout, only its size on the page.
+  std.layout(size => context {
+    let natural = measure(canvas).width
+    let target = if width == auto { natural } else if type(width) == ratio { size.width * width } else { width.to-absolute() }
+    let f = target / natural * zoom
+    std.scale(f, reflow: true, canvas)
   })
 }

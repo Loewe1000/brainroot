@@ -130,3 +130,14 @@
       branch([Strahlungsenergie], [Lichtenergie]), branch([Druckenergie]))
   ])
 )
+
+#pagebreak()
+
+// width and zoom: the whole map scaled, text included
+#set page(width: 16cm, height: auto, margin: 1cm)
+#set text(font: "Helvetica", size: 11pt)
+#brainroot(title: [Energiearten], width: 100%, karte)
+#v(5mm)
+#brainroot(title: [Energiearten], width: 6cm, karte)
+#v(5mm)
+#brainroot(title: [Energiearten], zoom: 60%, karte)
