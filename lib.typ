@@ -7,16 +7,27 @@
 
 #import "@preview/cetz:0.4.2"
 
-/// A branch of the mind map.
+/// A branch of the mind map. Children may be further `branch(...)` calls or
+/// plain content, which then counts as a leaf without children of its own.
 ///
-/// - label: label of the node (content or string).
-/// - ..kids: children; either further `branch(...)` calls or plain content,
-///   which then counts as a leaf without children of its own.
-/// - color: colour of the branch. Only read on the first level; below it
-///   every node inherits the colour of its parent. `none` takes the next
-///   colour from the palette.
-/// - side: `left`, `right` or `auto`. Only read on the first level.
-#let branch(label, ..kids, color: none, side: auto) = (
+/// -> dictionary
+#let branch(
+  /// Label of the node.
+  /// -> content | str
+  label,
+  /// Children: `branch(...)` calls or content (leaves).
+  /// -> content | dictionary
+  ..kids,
+  /// Colour of the branch. Only read on the first level; below it every node
+  /// inherits the colour of its parent. `none` takes the next colour from
+  /// the palette.
+  /// -> color | none
+  color: none,
+  /// `left` or `right` forces the side in the two-sided layout; `auto` lets
+  /// brainroot balance. Only read on the first level.
+  /// -> alignment | auto
+  side: auto,
+) = (
   brainroot-node: true,
   label: label,
   kids: kids.pos(),
@@ -77,6 +88,12 @@
 // Every palette: eight branch colours, handed out in order, and a colour for
 // the root. Boxes get the branch colour lightened by `tint`.
 
+/// The built-in palettes: `poster`, `pastel`, `grayscale`, `mono`, `plain`,
+/// `earth`, `ocean`, `sunset`, `forest`, `neon`. Each is a dictionary with
+/// `colors` (an array, handed out to the branches in order) and `root`.
+/// Take one as the starting point for your own.
+///
+/// -> dictionary
 #let palettes = (
   // Bright and bold, like markers on a whiteboard.
   poster: (colors: (rgb("#e8321e"), rgb("#f5a623"), rgb("#f2c230"), rgb("#3fc728"),
@@ -151,6 +168,12 @@
 //               passes      how often each line is drawn (2 = "scribbled")
 //   root      overrides for the root only (fill, stroke, radius)
 
+/// The built-in themes: `soft`, `outline`, `blocks`, `lines`, `sketch`,
+/// `bubbles`, `hand`, `scribble`, `marker`, `pencil`. Each is a dictionary
+/// with `edge`, `fill`, `stroke`, `radius`, `underline`, `dash`, `root` and,
+/// for the hand-drawn ones, `hand`; see the theme chapter for the fields.
+///
+/// -> dictionary
 #let themes = (
   // Pastel boxes, soft S-curves -- the whiteboard original.
   soft: (edge: "curve", fill: "tint", stroke: 0pt, radius: 8pt, underline: false, dash: "solid",
@@ -863,82 +886,107 @@
   for t in placed { boxes(t) }
 }
 
-/// Draws the mind map.
+/// Draws the mind map. The first-level branches come as positional
+/// arguments: `branch(...)` calls, plain content, or a Typst list whose items
+/// become branches and whose nested lists become children.
 ///
-/// - title: label of the root. Without it, the first positional argument
-///   is the root.
-/// - ..branches: first-level branches, each a `branch(...)`, content, or a
-///   Typst list whose items become branches and whose nested lists become
-///   children.
-/// - theme: name of a theme (`soft`, `outline`, `blocks`, `lines`, `sketch`,
-///   `bubbles`, `hand`, `scribble`, `marker`, `pencil`) or a dictionary that
-///   overrides individual fields of a theme (`base:` picks the starting
-///   theme, otherwise `soft`).
-/// - layout: arrangement of the branches around the root: `"both"` right
-///   and left, `"right"` or `"left"` one-sided, `"down"` or `"up"` as a tree
-///   from the top or bottom, `"radial"` fanning out from the root in every
-///   direction, `"star"` with the branches on a circle and their subtrees
-///   growing horizontally outward.
-/// - start: `radial` and `star` only: angle of the first branch; the
-///   others follow clockwise.
-/// - wobble: strength of the wobble in hand-drawn themes as a factor on
-///   their `amplitude`; `0` draws straight, `2` twice as restless.
-/// - palette: name of a palette (`poster`, `pastel`, `grayscale`, `mono`,
-///   `plain`, `earth`, `ocean`, `sunset`, `forest`, `neon`), an array of
-///   colours or a dictionary `(colors: ..., root: ...)`. The colours go in
-///   order to branches without a `color` of their own.
-/// - root-fill: colour of the root; `auto` takes the palette's.
-/// - tint: how much the branch colour is lightened for the boxes.
-/// - tint-min: minimum luminance (0 to 1) of tinted fills; dark palette
-///   colours are lightened further to reach it.
-/// - ink: text colour; `auto` picks per box between `ink-dark` and
-///   `ink-light` by the luminance of its fill.
-/// - ink-dark, ink-light: text on light and dark fills respectively.
-/// - ink-threshold: luminance (0 to 1) below which the light text applies.
-/// - scale: font size relative to the surroundings, per level (root,
-///   branches, leaves, ...); the last value holds for all deeper levels.
-/// - bold-depth: levels (from the root) set in bold.
-/// - thickness: line width per level of connection (root→branch,
-///   branch→leaf, ...); the last value holds for all deeper levels.
-///   All lengths may be given in `em`; they then follow the font size.
-/// - level-gap: distance between parent and child box along the direction
-///   of growth.
-/// - root-gap: distance between root and branches; with `radial` the
-///   minimum radius.
-/// - sibling-gap: distance between siblings across the direction of growth.
-/// - branch-gap: distance between the first-level branches.
-/// - max-width: labels wider than this wrap; `none` never wraps.
-/// - inset: padding of the boxes.
-/// - width: `auto` draws the map at its natural size; a length or a ratio
-///   (of the surrounding block) scales the whole map, text included, to
-///   that width.
-/// - zoom: a factor on the whole map, applied on top of `width`;
-///   `zoom: 50%` halves it.
+/// -> content
 #let brainroot(
+  /// First-level branches: `branch(...)`, content, or a list. Without
+  /// `title`, the first positional argument is the root.
+  /// -> content | dictionary
   ..branches,
+  /// Label of the root.
+  /// -> content | str | none
   title: none,
+  /// Name of a theme (`soft`, `outline`, `blocks`, `lines`, `sketch`,
+  /// `bubbles`, `hand`, `scribble`, `marker`, `pencil`) or a dictionary that
+  /// overrides individual fields of one (`base:` picks the starting theme,
+  /// otherwise `soft`).
+  /// -> str | dictionary
   theme: "soft",
+  /// Arrangement of the branches around the root: `"both"` right and left,
+  /// `"right"` or `"left"` one-sided, `"down"` or `"up"` as a tree from the
+  /// top or bottom, `"radial"` fanning out from the root in every direction,
+  /// `"star"` with the branches on a circle and their subtrees growing
+  /// horizontally outward.
+  /// -> str
   layout: "both",
+  /// `radial` and `star` only: angle of the first branch; the others follow
+  /// clockwise.
+  /// -> angle
   start: 60deg,
+  /// Strength of the wobble in hand-drawn themes, a factor on their
+  /// `amplitude`; `0` draws straight, `2` twice as restless.
+  /// -> float | ratio
   wobble: 1,
+  /// Name of a palette (`poster`, `pastel`, `grayscale`, `mono`, `plain`,
+  /// `earth`, `ocean`, `sunset`, `forest`, `neon`), an array of colours, or a
+  /// dictionary `(colors: ..., root: ...)`. The colours go in order to
+  /// branches without a `color` of their own.
+  /// -> str | array | dictionary
   palette: "poster",
+  /// Colour of the root; `auto` takes the palette's.
+  /// -> color | auto
   root-fill: auto,
+  /// How much the branch colour is lightened for the boxes.
+  /// -> ratio
   tint: 60%,
+  /// Minimum luminance (0 to 1) of tinted fills; dark palette colours are
+  /// lightened further to reach it.
+  /// -> float
   tint-min: 0.8,
+  /// Text colour; `auto` picks per box between `ink-dark` and `ink-light` by
+  /// the luminance of its fill.
+  /// -> color | auto
   ink: auto,
+  /// Text on light fills.
+  /// -> color
   ink-dark: black,
+  /// Text on dark fills.
+  /// -> color
   ink-light: white,
+  /// Luminance (0 to 1) below which `ink-light` applies.
+  /// -> float
   ink-threshold: 0.55,
+  /// Font size relative to the surroundings, per level (root, branches,
+  /// leaves, ...); the last value holds for all deeper levels.
+  /// -> array
   scale: (1.3, 1.1, 1.0),
+  /// Levels (from the root) set in bold.
+  /// -> int
   bold-depth: 2,
+  /// Line width per level of connection (root→branch, branch→leaf, ...); the
+  /// last value holds for all deeper levels.
+  /// -> array
   thickness: (0.27em, 0.14em),
+  /// Distance between parent and child box along the direction of growth.
+  /// -> length
   level-gap: 3.5em,
+  /// Distance between root and branches; with `radial` and `star` the
+  /// radius of the first ring.
+  /// -> length
   root-gap: 6em,
+  /// Distance between siblings across the direction of growth.
+  /// -> length
   sibling-gap: 0.7em,
+  /// Distance between the first-level branches.
+  /// -> length
   branch-gap: 2em,
+  /// Labels wider than this wrap; `none` never wraps.
+  /// -> length | none
   max-width: 14em,
+  /// Padding of the boxes. All lengths may be given in `em`; the defaults
+  /// are, so a map follows the font size around it.
+  /// -> dictionary | length
   inset: (x: 0.9em, y: 0.55em),
+  /// `auto` draws the map at its natural size; a length or a ratio of the
+  /// surrounding block scales the whole map, text included, to that width.
+  /// -> auto | length | ratio
   width: auto,
+  /// A factor on the whole map, applied on top of `width`; `zoom: 50%`
+  /// halves it.
+  /// -> ratio | float
   zoom: 100%,
 ) = context {
   // Lengths in em follow the surrounding font size, so a map in a footnote

@@ -301,4 +301,4 @@ only. `layout` puts all branches on one side.
 
 = Functions
 
-#show-module("../lib.typ")
+#show-module(read("../lib.typ"), name: "brainroot")

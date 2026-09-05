@@ -302,4 +302,4 @@ die Wurzel. `layout` legt alle Äste auf eine Seite.
 
 = Funktionen
 
-#show-module("../lib.typ")
+#show-module(read("../lib.typ"), name: "brainroot")
