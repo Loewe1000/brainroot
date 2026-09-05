@@ -103,12 +103,26 @@
   _path(p0, c0, c1, p1, st, opts)
 }
 
-// The middle of an edge: the Bézier point at t = 1/2. For an elbow it lands
-// on the vertical segment, for a straight line at the midpoint.
-#let _mid(p0, c0, c1, p1) = (
-  0.125 * p0.at(0) + 0.375 * c0.at(0) + 0.375 * c1.at(0) + 0.125 * p1.at(0),
-  0.125 * p0.at(1) + 0.375 * c0.at(1) + 0.375 * c1.at(1) + 0.125 * p1.at(1),
-)
+// A point on an edge: the Bézier point at t. For an elbow t = 1/2 lands on
+// the vertical segment, for a straight line at the midpoint.
+#let _bez(p0, c0, c1, p1, t) = {
+  let u = 1 - t
+  let (a, b, c, d) = (u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t)
+  (a * p0.at(0) + b * c0.at(0) + c * c1.at(0) + d * p1.at(0),
+   a * p0.at(1) + b * c0.at(1) + c * c1.at(1) + d * p1.at(1))
+}
+#let _mid(p0, c0, c1, p1) = _bez(p0, c0, c1, p1, 0.5)
+
+// Where the label of an edge goes: past the middle, where the edges of
+// siblings have fanned apart, and shifted across the direction of growth
+// away from the parent's axis, so the labels of neighbouring edges do not
+// meet. `du` is the child's offset on the cross axis.
+#let _label-at(p0, c0, c1, p1, du, opts, vertical) = {
+  let p = _bez(p0, c0, c1, p1, 0.68)
+  let away = if du < 0pt { -1 } else { 1 }
+  let off = opts.label-offset
+  if vertical { (p.at(0) + away * off, p.at(1)) } else { (p.at(0), p.at(1) - away * off) }
+}
 
 // A small label sitting on an edge.
 #let _edge-label(at, label, opts) = {
@@ -225,7 +239,7 @@
       let p1 = _xy(m1, anchor(k, ku), vertical)
       let (c0, c1) = _controls(p0, p1, vertical)
       _path(p0, c0, c1, p1, _stroke(k.depth - 1, k.color, opts), opts)
-      _edge-label(_mid(p0, c0, c1, p1), k.node.edge-label, opts)
+      _edge-label(_label-at(p0, c0, c1, p1, k.du, opts, vertical), k.node.edge-label, opts)
       _draw-tree(k, m1, ku, dir, opts, vertical)
     }
   }
@@ -249,10 +263,10 @@
   }
 }
 
-#let _root-edge(p1, m-inner, st, opts, vertical, label: none) = {
+#let _root-edge(p1, m-inner, st, opts, vertical, label: none, du: 0pt) = {
   let (c0, c1) = _root-controls(p1, m-inner, opts, vertical)
   _path((0pt, 0pt), c0, c1, p1, st, opts)
-  _edge-label(_mid((0pt, 0pt), c0, c1, p1), label, opts)
+  _edge-label(_label-at((0pt, 0pt), c0, c1, p1, du, opts, vertical), label, opts)
 }
 
 // Stacks branches on u, centred around 0, and draws them with their root edge.
@@ -264,7 +278,7 @@
     let au = if opts.theme.underline and not vertical { tu + t.size-u / 2 } else { tu }
     if not t.at("hidden", default: false) {
       _root-edge(_xy(m1, au, vertical), dir * m-inner, _stroke(0, t.color, opts), opts, vertical,
-        label: t.node.edge-label)
+        label: t.node.edge-label, du: tu)
       _draw-tree(t, m1, tu, dir, opts, vertical)
     }
     cu += t.size + opts.branch-gap

@@ -147,7 +147,7 @@
     inset: if type(theme.inset) == dictionary { theme.inset.pairs().map(((k, v)) => (k, abs(v))).to-dict() } else { abs(theme.inset) },
     level-gap: abs(sp.level), root-gap: abs(sp.root), sibling-gap: abs(sp.sibling), branch-gap: abs(sp.branch),
     max-width: abs(sp.max-width), brace-size: abs(sp.brace), summary-gap: abs(sp.summary), cloud-pad: abs(sp.cloud),
-    edge-label-fill: theme.edge-label-fill,
+    edge-label-fill: theme.edge-label-fill, label-offset: abs(sp.label),
     blanks: blanks, solution: solution, solution-ink: solution-ink, show-points: show-points,
     levels: none, level-sizes: none,
   )

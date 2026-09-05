@@ -1,7 +1,7 @@
 // The layouts that are not trees: star, radial and fishbone.
 
 #import "@preview/cetz:0.4.2"
-#import "draw.typ": _stroke, _path, _seg, _root-edge, _draw-tree, _draw-node, _edge-label, _mid
+#import "draw.typ": _stroke, _path, _seg, _root-edge, _draw-tree, _draw-node, _edge-label, _mid, _bez
 #import "layout.typ": _leaves, _weight, _sectors, _level-sizes
 
 // Star: every branch gets an angle, its box sits on a circle around the
@@ -127,7 +127,7 @@
        (p.at(0) - d * calc.cos(t.angle), p.at(1) - d * calc.sin(t.angle)))
     } else { (parent, p) }
     _path(parent, c0, c1, p, st, opts)
-    _edge-label(_mid(parent, c0, c1, p), t.node.edge-label, opts)
+    _edge-label(_bez(parent, c0, c1, p, 0.6), t.node.edge-label, opts)
     for k in t.kids { draw(k, p, t.angle) }
   }
   let shown = placed.filter(t => not t.at("hidden", default: false))

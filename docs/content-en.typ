@@ -540,7 +540,8 @@ place:
   name, an array of colours or a dictionary.
 - *Layout* is the arrangement, `spacing` the distances: `level` and
   `root` along the direction of growth, `sibling` and `branch` across,
-  `max-width` for wrapping, `brace`, `summary`, `cloud` and `padding`.
+  `max-width` for wrapping, `brace`, `summary`, `cloud`, `label` (how far an
+  edge label sits off its edge) and `padding`.
   Fields in `layout-defaults` and `spacing-defaults`.
 - *Nodes* are `branch(...)`, the root included: icon, fill, ink,
   highlight, gap, edge label, `id`, brace, cloud, points.

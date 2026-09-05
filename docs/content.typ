@@ -546,7 +546,8 @@ hat eine Stelle:
   Schrift. Ein Name, ein Array von Farben oder ein Dictionary.
 - *Layout* ist die Anordnung, `spacing` sind die Abstände: `level` und
   `root` in Wachstumsrichtung, `sibling` und `branch` quer dazu, `max-width`
-  für den Umbruch, `brace`, `summary`, `cloud` und `padding`. Felder in
+  für den Umbruch, `brace`, `summary`, `cloud`, `label` (Abstand der
+  Kantenschilder von der Kante) und `padding`. Felder in
   `layout-defaults` und `spacing-defaults`.
 - *Knoten* sind `branch(...)`, die Wurzel eingeschlossen: Icon, Füllung,
   Schriftfarbe, Hervorhebung, Lücke, Kantenbeschriftung, `id`, Klammer,
