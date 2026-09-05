@@ -7,7 +7,6 @@
 // a simple "tidy tree": every subtree gets as much room as its children
 // need and is centred on its parent.
 
-#import "@preview/cetz:0.4.2"
 
 /// A branch of the mind map. Children may be further `branch(...)` calls or
 /// plain content, which then counts as a leaf without children of its own.
