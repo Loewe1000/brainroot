@@ -282,8 +282,18 @@
     // Straight from the root, as the twigs are straight too.
     ((0pt, 0pt), p1)
   } else if opts.theme.edge not in ("curve", "taper") or vertical {
-    // Vertically the S-curve with its inflection at half height is calmest.
-    _controls((0pt, 0pt), p1, vertical)
+    // The bend halfway between the root's border and the branch -- not
+    // halfway from the root's centre, which on a wide root would put it
+    // right at the border. Vertically the S-curve with its inflection
+    // there is calmest too.
+    let (x1, y1) = p1
+    if vertical {
+      let mid = (m-inner + y1) / 2
+      ((0pt, mid), (x1, mid))
+    } else {
+      let mid = (m-inner + x1) / 2
+      ((mid, 0pt), (mid, y1))
+    }
   } else {
     let (x1, y1) = p1
     ((x1 * 0.9, 0pt), (m-inner, y1))
