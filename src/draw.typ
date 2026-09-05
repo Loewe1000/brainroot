@@ -370,6 +370,11 @@
         if side >= 0 { 35% } else { -35% }
       } else { l.bend }
       let c = (mid.at(0) - dy * bend / 100%, mid.at(1) + dx * bend / 100%)
+      // The curve leaves and arrives along the line from the control point
+      // to the box centre, so that is where it meets the border -- not
+      // where the straight line between the centres would.
+      let p0 = _border(a, c, sizes.at(l.from))
+      let p1 = _border(b, c, sizes.at(l.to))
       let color = if l.color == auto { rgb("#555555") } else { l.color }
       let st = (paint: color, thickness: l.thickness, dash: l.dash, cap: "round")
       // The heads are drawn here, along the exact tangent of the curve at
