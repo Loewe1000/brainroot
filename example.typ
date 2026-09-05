@@ -93,7 +93,8 @@
   branch([Chemische Energie]),
 )
 #v(1cm)
-#brainroot(title: [Energiearten], layout: "radial", theme: "lines", karte)
+#brainroot(title: [Energiearten], layout: "star", karte,
+  branch([Druckenergie]), branch([Strahlungsenergie], [Lichtenergie]))
 
 #pagebreak()
 

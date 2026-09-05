@@ -53,7 +53,7 @@ as arguments.
 - `title`: label of the root. Without it, the first positional argument is the root.
 - `theme`: look of boxes and edges, see below. Default: `"soft"`.
 - `layout`: arrangement, see below. Default: `"both"`.
-- `start`: `radial` only, angle of the first branch. Default: `60deg`.
+- `start`: `radial` and `star` only, angle of the first branch. Default: `60deg`.
 - `wobble`: strength of the wobble in hand-drawn themes, a factor on the theme's `amplitude`. Default: `1`.
 - `palette`: name of a palette (see below), an array of colours, or `(colors: ..., root: ...)`. Default: `"poster"`.
 - `root-fill`: colour of the root. Default: `auto`, the palette's.
@@ -85,12 +85,14 @@ All lengths may be given in `em`; the defaults are, so a map follows the font si
 | `both` | root in the middle, branches right and left (default) |
 | `right`, `left` | all branches on one side |
 | `down`, `up` | tree from top to bottom or bottom to top |
-| `radial` | branches in a circle around the root, subtrees grow outward |
+| `radial` | the whole tree fans out from the root, every subtree in its own sector |
+| `star` | branches on a circle around the root, subtrees grow horizontally outward |
 
 With `both` and no `side` given, the first branches go right until the right
 side reaches about half the total height; the rest go left. The top-to-bottom
-order is kept on both sides. With `radial` the first branch sits at `start`,
-the others follow clockwise; the radius grows until no subtrees overlap.
+order is kept on both sides. With `radial` and `star` the first branch
+sits at `start`, the others follow clockwise; the rings grow until nothing
+overlaps.
 
 ## Palettes
 

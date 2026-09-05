@@ -93,7 +93,9 @@ die übrigen nach links. `side: left` oder `side: right` legt einen Ast fest,
 `layout` bestimmt, wie die Äste um die Wurzel liegen. `both` ist die
 zweiseitige Karte von oben, `right` und `left` legen alles auf eine Seite.
 `down` und `up` setzen einen Baum von oben nach unten oder umgekehrt, wie ein
-Organigramm; `radial` verteilt die Äste im Kreis, die Teilbäume wachsen
+Organigramm. `radial` ist die klassische Mindmap nach Buzan: der ganze Baum
+fächert von der Wurzel aus, jeder Teilbaum bekommt seinen eigenen Sektor.
+`star` legt nur die Äste im Kreis um die Wurzel, die Teilbäume wachsen
 waagerecht nach außen.
 
 #let karte = [
@@ -135,9 +137,25 @@ waagerecht nach außen.
   width: 100%,
 )
 
-Bei `radial` steht der erste Ast bei `start` (Standard `60deg`), die weiteren
-folgen im Uhrzeigersinn. Der Radius beginnt bei `root-gap` und wächst, bis
-sich keine zwei Teilbäume überschneiden.
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energiearten], layout: "star", karte,
+      branch([Druckenergie]), branch([Strahlungsenergie], [Lichtenergie]))
+  },
+  source: ```typ
+#brainroot(title: [Energiearten], layout: "star", karte,
+  branch([Druckenergie]), branch([Strahlungsenergie], [Lichtenergie]))
+  ```,
+  width: 100%,
+)
+
+Bei `radial` und `star` steht der erste Ast bei `start` (Standard `60deg`),
+die weiteren folgen im Uhrzeigersinn. Bei `radial` teilen sich die Kinder den
+Sektor ihres Elternknotens, gewichtet nach der Größe ihrer Teilbäume, und
+liegen auf dem Ring ihrer Tiefe; die Ringe beginnen bei `root-gap` und werden
+so weit gedehnt, bis sich keine zwei Kästen überschneiden.
 
 = Paletten
 

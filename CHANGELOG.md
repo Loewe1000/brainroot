@@ -4,6 +4,6 @@
 
 First release: two-sided mind maps on CeTZ. Input as a Typst list or with
 `branch(...)`, contour layout in both axes, layouts `both`, `right`, `left`,
-`down`, `up` and `radial`, ten themes (four of them hand-drawn after the
+`down`, `up`, `radial` and `star`, ten themes (four of them hand-drawn after the
 TikZ decoration `sketch`, in pure Typst), ten palettes, automatic text
 colour by fill luminance.

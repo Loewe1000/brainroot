@@ -92,8 +92,10 @@ it its own colour instead of the next one from the palette.
 `layout` decides how the branches sit around the root. `both` is the
 two-sided map from above, `right` and `left` put everything on one side.
 `down` and `up` set a tree from top to bottom or the other way round, like an
-org chart; `radial` spreads the branches in a circle, the subtrees grow
-horizontally outward.
+org chart. `radial` is the classic Buzan mind map: the whole tree fans out
+from the root, every subtree in a sector of its own. `star` only puts the
+branches on a circle around the root, their subtrees grow horizontally
+outward.
 
 #let map = [
   - Kinetic energy
@@ -134,9 +136,25 @@ horizontally outward.
   width: 100%,
 )
 
-With `radial` the first branch sits at `start` (default `60deg`), the others
-follow clockwise. The radius begins at `root-gap` and grows until no two
-subtrees overlap.
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Forms of energy], layout: "star", map,
+      branch([Pressure]), branch([Radiation], [Light]))
+  },
+  source: ```typ
+#brainroot(title: [Forms of energy], layout: "star", map,
+  branch([Pressure]), branch([Radiation], [Light]))
+  ```,
+  width: 100%,
+)
+
+With `radial` and `star` the first branch sits at `start` (default `60deg`),
+the others follow clockwise. With `radial` the children share their parent's
+sector, weighted by the size of their subtrees, and sit on the ring of their
+depth; the rings begin at `root-gap` and are stretched until no two boxes
+overlap.
 
 = Palettes
 

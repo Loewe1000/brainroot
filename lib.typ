@@ -616,6 +616,23 @@
   _path(p0, c0, c1, p1, st, opts)
 }
 
+// Draws one node's box centred at (cx, cy), with its underline if the theme
+// has one.
+#let _draw-node(t, cx, cy, opts) = {
+  import cetz.draw: *
+  if opts.theme.hand != none { _hand-shape(cx, cy, t, t.depth, t.color, opts) }
+  content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width)))
+  if opts.theme.underline and t.depth > 0 {
+    // The underline is a line of its own in the width of the edge flowing
+    // into it; as a box border it would have a different width and sit
+    // offset by half its thickness.
+    let st = _stroke(t.depth - 1, t.color, opts) + (cap: "butt")
+    let (a, b) = ((cx - t.w / 2, cy - t.h / 2), (cx + t.w / 2, cy - t.h / 2))
+    if opts.theme.hand == none { line(a, b, stroke: st) }
+    else { _hand-line(((_pt(a.at(0)), _pt(a.at(1))), (_pt(b.at(0)), _pt(b.at(1)))), st, opts.theme.hand, _seed(_pt(a.at(0)), _pt(a.at(1)))) }
+  }
+}
+
 // Draws a subtree whose box has its inner edge at m and is centred at u.
 // With `underline` in a horizontal layout the edges sit on the baseline of
 // the text, otherwise at the centre of the box.
@@ -633,21 +650,7 @@
   }
   // The box after the edges, so it covers their ends.
   let (cx, cy) = _xy(m + dir * t.size-m / 2, u, vertical)
-  if opts.theme.hand != none { _hand-shape(cx, cy, t, t.depth, t.color, opts) }
-  content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width)))
-  if opts.theme.underline {
-    // The underline is a line of its own in the width of the edge flowing
-    // into it; as a box border it would have a different width and sit
-    // offset by half its thickness.
-    let st = _stroke(t.depth - 1, t.color, opts) + (cap: "butt")
-    let (a, b) = if vertical {
-      ((cx - t.w / 2, cy - t.h / 2), (cx + t.w / 2, cy - t.h / 2))
-    } else {
-      (_xy(m, anchor(t, u), false), _xy(m0, anchor(t, u), false))
-    }
-    if opts.theme.hand == none { line(a, b, stroke: st) }
-    else { _hand-line(((_pt(a.at(0)), _pt(a.at(1))), (_pt(b.at(0)), _pt(b.at(1)))), st, opts.theme.hand, _seed(_pt(a.at(0)), _pt(a.at(1)))) }
-  }
+  _draw-node(t, cx, cy, opts)
 }
 
 // Edge from the root to a branch: leaves the root towards the branch and
@@ -677,10 +680,10 @@
   }
 }
 
-// Radial: every branch gets an angle, its box sits on a circle around the
+// Star: every branch gets an angle, its box sits on a circle around the
 // root, its subtree grows horizontally outward. The radius starts at
 // `root-gap` and grows until no two subtrees overlap.
-#let _draw-radial(trees, rm, start, opts) = {
+#let _draw-star(trees, rm, start, opts) = {
   let n = trees.len()
   if n == 0 { return }
   let angles = range(n).map(i => start - i * 360deg / n)
@@ -739,6 +742,127 @@
   }
 }
 
+// Radial: the whole tree fans out from the root. Every subtree owns an
+// angular sector, proportional to its number of leaves, nested inside its
+// parent's sector; a node sits on the ring of its depth at the middle of
+// its sector. The rings start at `root-gap` and are spread out together
+// until no two boxes overlap. Text stays horizontal.
+
+// Number of leaves below a node, at least 1.
+#let _leaves(t) = if t.kids.len() == 0 { 1 } else { t.kids.map(_leaves).sum() }
+
+// The weight of a node's sector: the square root of its leaf count. Plain
+// leaf counts hand a wide branch most of the circle and squeeze the bare
+// ones together; the root softens that without ignoring size.
+#let _weight(t) = calc.sqrt(_leaves(t))
+
+// Assigns angles: every node gets `angle` (centre of its sector) and
+// `span` (width of its sector). The children share the parent's sector by
+// leaf count, but never more of it than they need: on their ring, the arc
+// they take up is their boxes plus gaps, so a branch with two leaves keeps
+// them close instead of spreading them over a third of the circle.
+// `radii` are the ring radii per depth. Returns the tree with these fields.
+#let _sectors(t, angle, span, radii, gap) = {
+  let total = t.kids.map(_weight).sum(default: 1)
+  let kids = ()
+  if t.kids.len() > 0 {
+    // Extent of a box across the ray: on a horizontal ray the boxes stack
+    // by height, on a vertical one by width.
+    let r = radii.at(t.depth + 1)
+    let across(k) = calc.abs(k.w * calc.sin(angle)) + calc.abs(k.h * calc.cos(angle))
+    let arc = t.kids.map(k => across(k) + gap).sum()
+    let needed = 1rad * (arc / r) * 1.15
+    let span = calc.min(span, needed)
+    let a = angle + span / 2
+    for k in t.kids {
+      let w = span * _weight(k) / total
+      kids.push(_sectors(k, a - w / 2, w, radii, gap))
+      a -= w
+    }
+  }
+  t + (angle: angle, span: span, kids: kids)
+}
+
+// The largest box extent on each depth: (max w, max h) per level.
+#let _level-sizes(t, acc) = {
+  while acc.len() <= t.depth { acc.push((w: 0pt, h: 0pt)) }
+  acc.at(t.depth) = (w: calc.max(acc.at(t.depth).w, t.w), h: calc.max(acc.at(t.depth).h, t.h))
+  for k in t.kids { acc = _level-sizes(k, acc) }
+  acc
+}
+
+#let _draw-radial(trees, rm, start, opts) = {
+  let n = trees.len()
+  if n == 0 { return }
+  // Ring radii per depth, a tight first guess: the rings are spread out
+  // below until nothing overlaps.
+  let sizes = _level-sizes((depth: 0, w: rm.w, h: rm.h, kids: trees), ())
+  let radii = (0pt,)
+  for d in range(1, sizes.len()) {
+    let gap = if d == 1 { opts.root-gap } else { opts.level-gap }
+    radii.push(radii.at(d - 1) + sizes.at(d - 1).h / 2 + gap + sizes.at(d).h / 2)
+  }
+  // Sectors of the first level, clockwise from `start`, by leaf count.
+  let total = trees.map(_weight).sum()
+  let a = start
+  let placed = ()
+  for t in trees {
+    let w = 360deg * _weight(t) / total
+    placed.push(_sectors(t, a - w / 2, w, radii, opts.sibling-gap))
+    a -= w
+  }
+  // Positions for a spreading factor f; then all boxes as rectangles.
+  let pos(t, f) = (radii.at(t.depth) * f * calc.cos(t.angle), radii.at(t.depth) * f * calc.sin(t.angle))
+  let rects(t, f, acc) = {
+    let (x, y) = pos(t, f)
+    acc.push((x0: x - t.w / 2, x1: x + t.w / 2, y0: y - t.h / 2, y1: y + t.h / 2))
+    for k in t.kids { acc = rects(k, f, acc) }
+    acc
+  }
+  let overlaps(f) = {
+    let gap = opts.sibling-gap
+    let rs = ((x0: -rm.w / 2, x1: rm.w / 2, y0: -rm.h / 2, y1: rm.h / 2),)
+    for t in placed { rs = rects(t, f, rs) }
+    for i in range(rs.len()) {
+      for j in range(i + 1, rs.len()) {
+        let (p, q) = (rs.at(i), rs.at(j))
+        if p.x0 < q.x1 + gap and q.x0 < p.x1 + gap and p.y0 < q.y1 + gap and q.y0 < p.y1 + gap {
+          return true
+        }
+      }
+    }
+    false
+  }
+  let f = 1.0
+  let steps = 0
+  while overlaps(f) and steps < 60 { f *= 1.05; steps += 1 }
+
+  // Edges first, boxes after, so the boxes cover the line ends.
+  let draw(t, parent, pa) = {
+    let p = pos(t, f)
+    let st = _stroke(t.depth - 1, t.color, opts)
+    if opts.theme.edge == "curve" {
+      // Leaves the parent along its own ray and arrives along the child's:
+      // a gentle bend that keeps the fan readable.
+      let (dx, dy) = (p.at(0) - parent.at(0), p.at(1) - parent.at(1))
+      let d = calc.sqrt((dx / 1pt) * (dx / 1pt) + (dy / 1pt) * (dy / 1pt)) * 1pt * 0.4
+      let c0 = (parent.at(0) + d * calc.cos(pa), parent.at(1) + d * calc.sin(pa))
+      let c1 = (p.at(0) - d * calc.cos(t.angle), p.at(1) - d * calc.sin(t.angle))
+      _path(parent, c0, c1, p, st, opts)
+    } else {
+      _path(parent, parent, p, p, st, opts)
+    }
+    for k in t.kids { draw(k, p, t.angle) }
+  }
+  for t in placed { draw(t, (0pt, 0pt), t.angle) }
+  let boxes(t) = {
+    let (x, y) = pos(t, f)
+    _draw-node(t, x, y, opts)
+    for k in t.kids { boxes(k) }
+  }
+  for t in placed { boxes(t) }
+}
+
 /// Draws the mind map.
 ///
 /// - title: label of the root. Without it, the first positional argument
@@ -752,9 +876,11 @@
 ///   theme, otherwise `soft`).
 /// - layout: arrangement of the branches around the root: `"both"` right
 ///   and left, `"right"` or `"left"` one-sided, `"down"` or `"up"` as a tree
-///   from the top or bottom, `"radial"` in a circle.
-/// - start: `radial` only: angle of the first branch; the others follow
-///   clockwise.
+///   from the top or bottom, `"radial"` fanning out from the root in every
+///   direction, `"star"` with the branches on a circle and their subtrees
+///   growing horizontally outward.
+/// - start: `radial` and `star` only: angle of the first branch; the
+///   others follow clockwise.
 /// - wobble: strength of the wobble in hand-drawn themes as a factor on
 ///   their `amplitude`; `0` draws straight, `2` twice as restless.
 /// - palette: name of a palette (`poster`, `pastel`, `grayscale`, `mono`,
@@ -825,7 +951,7 @@
   let max-width = abs(max-width)
   let thickness = thickness.map(abs)
   let inset = if type(inset) == dictionary { inset.pairs().map(((k, v)) => (k, abs(v))).to-dict() } else { abs(inset) }
-  let layouts = ("both", "right", "left", "down", "up", "radial")
+  let layouts = ("both", "right", "left", "down", "up", "radial", "star")
   assert(layout in layouts, message: "brainroot: layout must be one of " + layouts.join(", "))
   let vertical = layout in ("down", "up")
   let theme = _theme(theme)
@@ -861,6 +987,8 @@
     import cetz.draw: *
     if layout == "radial" {
       _draw-radial(trees, rm, start, opts)
+    } else if layout == "star" {
+      _draw-star(trees, rm, start, opts)
     } else if vertical {
       let dir = if layout == "down" { -1 } else { 1 }
       _draw-stack(trees, dir, rm.h / 2, dir * (rm.h / 2 + root-gap), opts, true)
