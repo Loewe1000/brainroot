@@ -71,6 +71,7 @@ summary: none, cloud: none, points: none)`
 - `edge-label`: a small label on the edge into this node.
 - `id`: a name for cross-links; `summary`: a labelled brace beyond the children; `cloud`: `true` or a colour behind the subtree.
 - `points`: points for grading; `brainroot-points(...)` adds them up, `show-points: true` shows badges.
+- `equal`: `true`, `"width"` or `"height"` makes this node's children the same size; on the root, the first level.
 
 In a list, `<name>` at the end of an item gives the node its `id`, an item
 that is nothing but `*bold*` marks it, one that is nothing but `_emphasised_`
@@ -224,8 +225,8 @@ A probability tree with edge labels:
 
 ```typ
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
-  branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
-  branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
+  branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true),
+  branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true))
 ```
 
 Cross-links, a summary brace and a cloud:

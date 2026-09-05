@@ -165,7 +165,7 @@
   import cetz.draw: *
   if opts.theme.hand != none { _hand-shape(cx, cy, t, t.depth, t.color, opts) }
   let id = if t.depth == 0 { "root" } else { t.node.id }
-  content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width)),
+  content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width, height: t.at("height", default: auto))),
     name: if id == none { none } else { "n-" + id })
   if opts.show-points and t.node.points != none {
     // A badge at the top right corner of the box.
@@ -328,6 +328,27 @@
   (c.at(0) + dx * t, c.at(1) + dy * t)
 }
 
+// A point on the line from `p` towards `towards`, `d` pt away from `p`.
+#let _shorten(p, towards, d) = {
+  let (dx, dy) = (_pt(towards.at(0)) - _pt(p.at(0)), _pt(towards.at(1)) - _pt(p.at(1)))
+  let len = calc.max(calc.sqrt(dx * dx + dy * dy), 1e-9)
+  (_pt(p.at(0)) + dx / len * d, _pt(p.at(1)) + dy / len * d)
+}
+
+// A stealth arrowhead with its tip at `tip`, pointing away from `from`.
+#let _head(tip, from, size, color) = {
+  import cetz.draw: line
+  let (tx, ty) = (_pt(tip.at(0)), _pt(tip.at(1)))
+  let (dx, dy) = (tx - _pt(from.at(0)), ty - _pt(from.at(1)))
+  let len = calc.max(calc.sqrt(dx * dx + dy * dy), 1e-9)
+  let (ux, uy) = (dx / len, dy / len)
+  let (nx, ny) = (-uy, ux)
+  let base = (tx - ux * size, ty - uy * size)
+  let notch = (tx - ux * size * 0.7, ty - uy * size * 0.7)
+  line((tx, ty), (base.at(0) + nx * size * 0.4, base.at(1) + ny * size * 0.4), notch,
+    (base.at(0) - nx * size * 0.4, base.at(1) - ny * size * 0.4), close: true, fill: color, stroke: none)
+}
+
 // Cross-links, drawn last, over everything: the nodes are addressed by the
 // CeTZ names `_draw-node` gave them.
 #let _draw-links(links, sizes, opts) = {
@@ -351,17 +372,26 @@
       let c = (mid.at(0) - dy * bend / 100%, mid.at(1) + dx * bend / 100%)
       let color = if l.color == auto { rgb("#555555") } else { l.color }
       let st = (paint: color, thickness: l.thickness, dash: l.dash, cap: "round")
-      // The heads keep a solid outline even on a dashed curve.
-      let head = (fill: color, stroke: (paint: color, thickness: l.thickness, dash: "solid"))
-      let mark = if l.arrow == "both" { (start: "stealth", end: "stealth") + head }
-        else if l.arrow == true { (end: "stealth") + head } else { none }
+      // The heads are drawn here, along the exact tangent of the curve at
+      // its ends; CeTZ takes the direction from the last sampled piece,
+      // which points elsewhere on a curve that bends hard at the end.
+      // The curve stops short by the head's length so the dashes do not
+      // poke through it.
+      let size = _pt(l.thickness.to-absolute()) * 6
+      let at-end = l.arrow in (true, "both")
+      let at-start = l.arrow == "both"
+      let (q0, q1) = (p0, p1)
+      if at-end { q1 = _shorten(p1, c, size * 0.8) }
+      if at-start { q0 = _shorten(p0, c, size * 0.8) }
       if opts.theme.hand == none {
-        bezier(p0, p1, c, stroke: st, mark: mark)
+        bezier(q0, q1, c, stroke: st)
       } else {
-        let pts = _flatten-bezier(p0, c, c, p1)
+        let pts = _flatten-bezier(q0, c, c, q1)
         let q = _wobble(pts, opts.theme.hand, _seed(..p0, ..p1))
-        line(..q, stroke: st, mark: mark)
+        line(..q, stroke: st)
       }
+      if at-end { _head(p1, c, size, color) }
+      if at-start { _head(p0, c, size, color) }
       if l.label != none {
         let mid = (0.25 * p0.at(0) + 0.5 * c.at(0) + 0.25 * p1.at(0), 0.25 * p0.at(1) + 0.5 * c.at(1) + 0.25 * p1.at(1))
         content(mid, box(fill: opts.edge-label-fill, inset: 0.25em, radius: 0.2em,

@@ -86,7 +86,7 @@
     or (opts.blanks == "branches" and depth == 1))
 }
 
-#let _nodebox(node, depth, color, opts, width: auto) = {
+#let _nodebox(node, depth, color, opts, width: auto, height: auto) = {
   let th = opts.theme
   let p = _paint(node, depth, color, opts)
   let scale = opts.scale.at(calc.min(depth, opts.scale.len() - 1))
@@ -106,7 +106,15 @@
   let fill = if drawn { p.fill } else { none }
   let stroke = if drawn { p.stroke } else { none }
   if p.shape == "rect" {
-    box(width: width, fill: fill, stroke: stroke, radius: p.radius, inset: opts.inset, body)
+    // A box with a set size centres its text; a natural one lays it out
+    // from the top left, which is the same thing for a single line.
+    let body = if width == auto and height == auto { body } else { align(center + horizon, body) }
+    box(width: width, height: height, fill: fill, stroke: stroke, radius: p.radius, inset: opts.inset, body)
+  } else if height != auto {
+    // Equal sizes among shaped siblings: the shape takes the size as given.
+    let inner = align(center + horizon, box(width: width, align(center, body)))
+    if p.shape == "circle" { circle(radius: calc.max(width, height) / 2, fill: fill, stroke: stroke, inset: 0pt, inner) }
+    else { ellipse(width: width, height: height, fill: fill, stroke: stroke, inset: 0pt, inner) }
   } else if p.size != none {
     // Fixed diameter: the text wraps inside and is centred. If it does not
     // fit, the font shrinks step by step to 60%; if that is still not

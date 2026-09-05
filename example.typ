@@ -180,8 +180,8 @@
   branch([Gemische], [homogen], [heterogen]))
 #v(5mm)
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain", spacing: (level: 5em),
-  branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
-  branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
+  branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true),
+  branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true))
 
 #pagebreak()
 // Querverbindungen, Klammern, Wolken

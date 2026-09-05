@@ -70,6 +70,11 @@
   /// adds them up and `show-points: true` shows them as a badge.
   /// -> int | float | none
   points: none,
+  /// Makes this node's children the same size: `true` in width and height,
+  /// `"width"` or `"height"` in one of them. Every child grows to the
+  /// largest sibling, so a row of leaves lines up.
+  /// -> bool | str
+  equal: false,
 ) = (
   brainroot-node: true,
   label: label,
@@ -87,6 +92,7 @@
   summary: summary,
   cloud: cloud,
   points: points,
+  equal: equal,
 )
 
 /// A connection between two nodes that are not parent and child, drawn over

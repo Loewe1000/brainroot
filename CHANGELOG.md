@@ -49,6 +49,10 @@
   with a label beyond a node's children; `cloud: true` or a colour draws a
   soft cloud behind the subtree. Both in the tree layouts, not in `radial`
   and `star`.
+- **Equal siblings.** `branch(..., equal: true)` makes a node's children
+  the same size, `"width"` or `"height"` in one direction; on the root it
+  applies to the first level. Arrowheads of cross-links are drawn along
+  the exact tangent of the curve.
 - **Points.** `branch(..., points: 2)`, `show-points: true` for a badge on
   the box, `brainroot-points(...)` to add them up.
 - **Building up.** `reveal: 3` draws the first three branches, a function

@@ -181,20 +181,22 @@ source.
 == Edge labels
 
 `edge-label` puts a small label on the edge that leads to a node. That turns
-the mind map into a probability tree or a decision tree.
+the mind map into a probability tree or a decision tree. `equal: true` on a
+branch makes its children the same size, `"width"` or `"height"` in one
+direction; on the root it applies to the first level.
 
 #show-example(
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
     brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
-      branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
-      branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
+      branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true),
+      branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   },
   source: ```typ
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
-  branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
-  branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
+  branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true),
+  branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   ```,
   width: 100%,
 )

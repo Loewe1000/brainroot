@@ -186,20 +186,22 @@ Lösung entstehen so aus derselben Quelle.
 
 `edge-label` setzt ein kleines Schild auf die Kante, die zu einem Knoten
 führt. Damit werden aus der Mindmap Baumdiagramme der Stochastik oder
-Entscheidungsbäume.
+Entscheidungsbäume. `equal: true` an einem Ast macht seine Kinder gleich
+groß, `"width"` oder `"height"` in einer Richtung; an der Wurzel gilt es
+für die erste Ebene.
 
 #show-example(
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
     brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
-      branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
-      branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
+      branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true),
+      branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   },
   source: ```typ
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
-  branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
-  branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
+  branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true),
+  branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   ```,
   width: 100%,
 )

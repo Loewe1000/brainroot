@@ -6,7 +6,7 @@
 // direction of growth on m.
 
 #import "input.typ": _norm
-#import "node.typ": _measure-node
+#import "node.typ": _measure-node, _nodebox, _spec
 
 // --- Layout ----------------------------------------------------------------
 //
@@ -33,15 +33,38 @@
 // up as far as it collides with the previous one on no level. So a leaf
 // without children stays close to its neighbour, even if that one has a
 // deep subtree.
-#let _measure-tree(node, depth, base, opts, vertical) = {
+#let _measure-tree(node, depth, base, opts, vertical, force: none) = {
   // `shade` steps the branch colour per level: positive lightens towards
   // the leaves, negative darkens.
   let color = if opts.shade == 0% or depth <= 1 { base }
     else if opts.shade > 0% { base.lighten(opts.shade * (depth - 1)) }
     else { base.darken(-opts.shade * (depth - 1)) }
   let m = _measure-node(node, depth, color, opts)
+  // `force` sets the box to a given size: a sibling asked for equal sizes.
+  // Width and height of a box are its outer size in Typst, so they go in
+  // as they are; a shaped box needs both, or it would grow with every
+  // measurement.
+  let height = auto
+  if force != none {
+    let shaped = _spec(depth, opts.theme).shape != "rect"
+    let w = if force.w != none { force.w } else if shaped and force.h != none { m.w } else { m.width }
+    let h = if force.h != none { force.h } else if shaped and force.w != none { m.h } else { auto }
+    let mm = measure(_nodebox(node, depth, color, opts, width: w, height: h))
+    m = (w: mm.width, h: mm.height, width: w)
+    height = h
+  }
   let sz = _sizes(m, vertical)
   let kids = node.kids.map(k => _measure-tree(_norm(k), depth + 1, base, opts, vertical))
+  // Equal children: measure them once more, each at the largest size.
+  if node.equal != false and kids.len() > 1 {
+    let maxw = kids.map(k => k.w).fold(0pt, calc.max)
+    let maxh = kids.map(k => k.h).fold(0pt, calc.max)
+    let f = (
+      w: if node.equal in (true, "width") { maxw } else { none },
+      h: if node.equal in (true, "height") { maxh } else { none },
+    )
+    kids = node.kids.map(k => _measure-tree(_norm(k), depth + 1, base, opts, vertical, force: f))
+  }
 
   let placed = ()
   let merged = ()   // contour of the children placed so far, absolute on u
@@ -92,7 +115,7 @@
   let hi = contour.map(c => c.hi).fold(0pt, calc.max)
   (
     node: node, depth: depth, color: color, kids: placed,
-    w: m.w, h: m.h, width: m.width, size-m: sz.m, size-u: sz.u,
+    w: m.w, h: m.h, width: m.width, height: height, size-m: sz.m, size-u: sz.u,
     contour: contour, lo: lo, hi: hi, size: hi - lo, extent: extent,
     summary: summary, pad: pad,
   )

@@ -172,13 +172,21 @@
   let root-node = _norm(root)
   let rm = _measure-node(root-node, 0, black, opts)
 
-  let trees = args.map(_expand).flatten().enumerate().map(((i, b)) => {
+  let measure-branches(force) = args.map(_expand).flatten().enumerate().map(((i, b)) => {
     let b = _norm(b)
     let c = if b.color != none { b.color } else { pal.colors.at(calc.rem(i, pal.colors.len())) }
-    let t = _measure-tree(b, 1, c, opts, vertical)
+    let t = _measure-tree(b, 1, c, opts, vertical, force: force)
     let hidden = if reveal == auto { false } else if type(reveal) == int { i >= reveal } else { not reveal(i) }
     t + (hidden: hidden)
   })
+  let trees = measure-branches(none)
+  // `equal` on the root: the first-level branches at one size.
+  if root-node.equal != false and trees.len() > 1 {
+    trees = measure-branches((
+      w: if root-node.equal in (true, "width") { trees.map(t => t.w).fold(0pt, calc.max) } else { none },
+      h: if root-node.equal in (true, "height") { trees.map(t => t.h).fold(0pt, calc.max) } else { none },
+    ))
+  }
   // Arranging for the cross-links: try the orders, keep the cheapest.
   // A single `connect(...)` without the trailing comma is a dictionary,
   // not an array of one: take it as such.
