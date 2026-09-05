@@ -212,21 +212,22 @@ zwei Knoten über die Karte, mit `label`, `arrow`, `dash` und `bend`. Die
 Wurzel heißt `"root"`. `summary` setzt eine Klammer mit Beschriftung hinter
 die Kinder eines Knotens, `cloud` legt eine Wolke hinter seinen Teilbaum.
 Klammern und Wolken gibt es in den Baum-Anordnungen, nicht bei `radial` und
-`star`.
+`star`. `arrange: "links"` ordnet die Äste und dreht Kinder um, damit
+verbundene Knoten nahe beieinander liegen; hier rückt CO₂ neben Glucose.
 
 #show-example(
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Fotosynthese],
-      links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+    brainroot(width: 100%, title: [Fotosynthese], arrange: "links",
+      links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], dash: "dotted")),
       branch([Lichtreaktion], [Fotolyse], [ATP], [NADPH], id: "licht", cloud: true),
       branch([Dunkelreaktion], [Calvin-Zyklus], branch([Glucose], id: "glucose"), id: "dunkel", summary: [Produkte]),
       branch([Voraussetzungen], [Licht], [Wasser], branch([CO₂], id: "co2"), summary: [von außen]))
   },
   source: ```typ
-#brainroot(title: [Fotosynthese],
-  links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+#brainroot(title: [Fotosynthese], arrange: "links",
+  links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], dash: "dotted")),
   branch([Lichtreaktion], [Fotolyse], [ATP], [NADPH], id: "licht", cloud: true),
   branch([Dunkelreaktion], [Calvin-Zyklus], branch([Glucose], id: "glucose"), id: "dunkel", summary: [Produkte]),
   branch([Voraussetzungen], [Licht], [Wasser], branch([CO₂], id: "co2"), summary: [von außen]))
@@ -387,7 +388,7 @@ Karte gezeigt:
       set text(size: 8pt)
       brainroot(width: 100%, title: [Energiearten], palette: name, karte)
     },
-    source: raw(lang: "typ", "#brainroot(title: [Energiearten], palette: \"" + name + "\", karte)"),
+    source: raw(lang: "typ", block: true, "#brainroot(title: [Energiearten], palette: \"" + name + "\", karte)"),
     width: 100%,
   )
 ]
@@ -426,7 +427,7 @@ weiterhin aus der Palette. Zehn sind eingebaut:
       set text(size: 8pt)
       brainroot(width: 100%, title: [Energiearten], theme: name, karte)
     },
-    source: raw(lang: "typ", "#brainroot(title: [Energiearten], theme: \"" + name + "\", karte)"),
+    source: raw(lang: "typ", block: true, "#brainroot(title: [Energiearten], theme: \"" + name + "\", karte)"),
     width: 100%,
   )
 ]
@@ -560,9 +561,12 @@ samt Schrift auf eine Breite, als Länge oder als Anteil des umgebenden
 Blocks (`width: 100%`); `zoom` ist ein Faktor obendrauf. Beide ändern nur
 die Größe, nie das Layout.
 
-Was in einem Dokument immer gleich ist, wird zur Vorgabe: `#let karte =
-brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))`, und
-danach genügt `#karte(title: [...])[...]`.
+Was in einem Dokument immer gleich ist, wird zur Vorgabe:
+
+#show-code[```typ
+#let karte = brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))
+#karte(title: [Energiearten])[ ... ]
+```]
 
 = Barrierefreiheit und Leistung
 

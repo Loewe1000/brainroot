@@ -110,10 +110,11 @@
   /// Dash pattern of the curve.
   /// -> str
   dash: "dashed",
-  /// How far the curve bows out, as a share of the distance; `0%` is a
-  /// straight line, negative bends the other way.
-  /// -> ratio
-  bend: 30%,
+  /// How far the curve bows out, as a share of the distance: `auto` bows
+  /// away from the root, a ratio bows to the left of the direction of
+  /// travel, negative to the right, `0%` is a straight line.
+  /// -> auto | ratio
+  bend: auto,
   /// Colour of the curve; `auto` is a dark grey.
   /// -> color | auto
   color: auto,

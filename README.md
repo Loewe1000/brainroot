@@ -84,7 +84,7 @@ solution-ink: auto, show-points: false, reveal: auto, width: auto, zoom:
 
 - `title`: the root, content or a `branch(...)`. Without it, the first positional argument is the root.
 - `wobble`: strength of the wobble in hand-drawn themes, a factor on the theme's `amplitude`.
-- `links`: cross-links, each `connect(from, to, label: none, arrow: true, dash: "dashed", bend: 30%, color: auto)`, addressing nodes by `id` (`"root"` is the root).
+- `links`: cross-links, each `connect(from, to, label: none, arrow: true, dash: "dashed", bend: auto, color: auto)`, addressing nodes by `id` (`"root"` is the root). `arrange: "links"` orders branches and children so that linked nodes come close together.
 - `blanks`: draws `"leaves"`, `"branches"` or `"all"` nodes as gaps; `solution: true` fills them in, `solution-ink` colours the answers.
 - `show-points`: badges with each node's points.
 - `reveal`: `auto`, the number of first-level branches to draw, or a function of the index; the layout stays put.
@@ -231,7 +231,7 @@ A probability tree with edge labels:
 Cross-links, a summary brace and a cloud:
 
 ```typ
-#brainroot(title: [Photosynthesis],
+#brainroot(title: [Photosynthesis], arrange: "links",
   links: (connect("light", "dark", label: [ATP, NADPH]),),
   branch([Light reaction], [Photolysis], [ATP], [NADPH], id: "light", cloud: true),
   branch([Dark reaction], [Calvin cycle], [Glucose], id: "dark", summary: [products]),

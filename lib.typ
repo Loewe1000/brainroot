@@ -15,7 +15,7 @@
 #import "src/themes.typ": themes, theme-defaults, _theme
 #import "src/options.typ": layout-defaults, spacing-defaults, _layout, _spacing
 #import "src/node.typ": _measure-node
-#import "src/layout.typ": _measure-tree, _split, _level-sizes
+#import "src/layout.typ": _measure-tree, _split, _level-sizes, _arrangement-positions, _link-cost, _permutations, _reversed
 #import "src/draw.typ": _draw-node, _draw-stack, _sizes-by-id, _draw-links
 #import "src/radial.typ": _draw-star, _draw-radial, _draw-fishbone
 
@@ -93,6 +93,13 @@
   /// Cross-links between nodes, each a `connect(...)`.
   /// -> array
   links: (),
+  /// `"keep"` draws the branches in the order given; `"links"` orders the
+  /// first-level branches, and turns the children of a branch around where
+  /// that helps, so that nodes joined by cross-links come close together.
+  /// Tree layouts only; up to seven branches are tried exhaustively, more
+  /// by swapping neighbours.
+  /// -> str
+  arrange: "keep",
   /// Draws whole classes of nodes as gaps: `"leaves"`, `"branches"` (the
   /// first level) or `"all"`; `none` only honours each node's own `blank`.
   /// -> none | str
@@ -172,6 +179,52 @@
     let hidden = if reveal == auto { false } else if type(reveal) == int { i >= reveal } else { not reveal(i) }
     t + (hidden: hidden)
   })
+  // Arranging for the cross-links: try the orders, keep the cheapest.
+  // A single `connect(...)` without the trailing comma is a dictionary,
+  // not an array of one: take it as such.
+  let links = if type(links) == dictionary { (links,) } else { links }
+  let links = links.filter(l => type(l) == dictionary and l.at("brainroot-link", default: false))
+  if arrange == "links" and links.len() > 0 and lay.kind not in ("radial", "star", "fishbone") {
+    let root-m = if vertical { rm.h } else { rm.w } / 2
+    let sides-of(ts) = if vertical {
+      ((if lay.kind == "down" { -1 } else { 1 }, ts),)
+    } else {
+      let s = _split(ts, opts.branch-gap, lay.kind)
+      ((1, s.right), (-1, s.left))
+    }
+    let cost(ts) = _link-cost(links, _arrangement-positions(sides-of(ts), root-m, opts))
+    // Branch order: every permutation for up to seven, neighbour swaps
+    // beyond that.
+    let best = trees
+    let best-cost = cost(trees)
+    if trees.len() <= 7 {
+      for p in _permutations(range(trees.len())) {
+        let ts = p.map(i => trees.at(i))
+        let c = cost(ts)
+        if c < best-cost { best = ts; best-cost = c }
+      }
+    } else {
+      let improved = true
+      while improved {
+        improved = false
+        for i in range(best.len() - 1) {
+          let ts = best
+          (ts.at(i), ts.at(i + 1)) = (best.at(i + 1), best.at(i))
+          let c = cost(ts)
+          if c < best-cost { best = ts; best-cost = c; improved = true }
+        }
+      }
+    }
+    // Then each branch's children the other way round, where that helps.
+    for i in range(best.len()) {
+      let ts = best
+      ts.at(i) = _reversed(best.at(i))
+      let c = cost(ts)
+      if c < best-cost { best = ts; best-cost = c }
+    }
+    trees = best
+  }
+
   // Aligned levels: one line per depth, from the largest box on each.
   if lay.align-levels and lay.kind not in ("radial", "star", "fishbone") {
     let sizes = _level-sizes((depth: 0, w: rm.w, h: rm.h, kids: trees), ())
@@ -205,7 +258,7 @@
     if links.len() > 0 {
       let sizes = (root: (w: rm.w, h: rm.h))
       for t in trees { sizes = _sizes-by-id(t, sizes) }
-      _draw-links(links.filter(l => type(l) == dictionary and l.at("brainroot-link", default: false)), sizes, opts)
+      _draw-links(links, sizes, opts)
     }
   })
 

@@ -42,7 +42,9 @@
 - **Background.** `background:` and `padding:` paint a colour behind the map.
 - **Cross-links.** `branch(..., id: "a")` names a node, `brainroot(links:
   (connect("a", "b", label: [...]),))` draws a curve between two nodes over
-  the map, with arrow, dash and bend.
+  the map, with arrow, dash and bend; `bend: auto` bows away from the
+  root. `arrange: "links"` orders the branches and turns children around
+  so that linked nodes come close together.
 - **Summary braces and clouds.** `branch(..., summary: [...])` puts a brace
   with a label beyond a node's children; `cloud: true` or a colour draws a
   soft cloud behind the subtree. Both in the tree layouts, not in `radial`

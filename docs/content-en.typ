@@ -206,21 +206,23 @@ A mind map is a tree; the ideas in it rarely are. `id` names a node,
 with `label`, `arrow`, `dash` and `bend`. The root is called `"root"`.
 `summary` puts a labelled brace beyond a node's children, `cloud` lays a
 cloud behind its subtree. Braces and clouds exist in the tree layouts, not
-in `radial` and `star`.
+in `radial` and `star`. `arrange: "links"` orders the branches and turns
+children around so that linked nodes come close together; here CO₂ moves
+next to glucose.
 
 #show-example(
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Photosynthesis],
-      links: (connect("light", "dark", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+    brainroot(width: 100%, title: [Photosynthesis], arrange: "links",
+      links: (connect("light", "dark", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], dash: "dotted")),
       branch([Light reaction], [Photolysis], [ATP], [NADPH], id: "light", cloud: true),
       branch([Dark reaction], [Calvin cycle], branch([Glucose], id: "glucose"), id: "dark", summary: [products]),
       branch([Requirements], [Light], [Water], branch([CO₂], id: "co2"), summary: [from outside]))
   },
   source: ```typ
-#brainroot(title: [Photosynthesis],
-  links: (connect("light", "dark", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+#brainroot(title: [Photosynthesis], arrange: "links",
+  links: (connect("light", "dark", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], dash: "dotted")),
   branch([Light reaction], [Photolysis], [ATP], [NADPH], id: "light", cloud: true),
   branch([Dark reaction], [Calvin cycle], branch([Glucose], id: "glucose"), id: "dark", summary: [products]),
   branch([Requirements], [Light], [Water], branch([CO₂], id: "co2"), summary: [from outside]))
@@ -381,7 +383,7 @@ with the same map:
       set text(size: 8pt)
       brainroot(width: 100%, title: [Forms of energy], palette: name, map)
     },
-    source: raw(lang: "typ", "#brainroot(title: [Forms of energy], palette: \"" + name + "\", map)"),
+    source: raw(lang: "typ", block: true, "#brainroot(title: [Forms of energy], palette: \"" + name + "\", map)"),
     width: 100%,
   )
 ]
@@ -420,7 +422,7 @@ palette. Ten are built in:
       set text(size: 8pt)
       brainroot(width: 100%, title: [Forms of energy], theme: name, map)
     },
-    source: raw(lang: "typ", "#brainroot(title: [Forms of energy], theme: \"" + name + "\", map)"),
+    source: raw(lang: "typ", block: true, "#brainroot(title: [Forms of energy], theme: \"" + name + "\", map)"),
     width: 100%,
   )
 ]
@@ -553,9 +555,12 @@ included, to a width given as a length or as a share of the surrounding
 block (`width: 100%`); `zoom` is a factor on top. Both change only the
 size, never the layout.
 
-Whatever is the same throughout a document becomes a preset: `#let map =
-brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))`,
-after which `#map(title: [...])[...]` is enough.
+Whatever is the same throughout a document becomes a preset:
+
+#show-code[```typ
+#let map = brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))
+#map(title: [Forms of energy])[ ... ]
+```]
 
 = Accessibility and performance
 

@@ -216,8 +216,10 @@
   // faces away from the tree.
   let (p, q) = if dir > 0 { (_xy(mb, u + lo, vertical), _xy(mb, u + hi, vertical)) }
     else { (_xy(mb, u + hi, vertical), _xy(mb, u + lo, vertical)) }
-  cetz.decorations.brace(p, q, amplitude: _pt(opts.brace-size.to-absolute()),
-    stroke: (paint: t.color, thickness: 0.07em))
+  // A CeTZ brace is a tapered, filled shape: colour the fill, no stroke.
+  let amp = _pt(opts.brace-size.to-absolute())
+  cetz.decorations.brace(p, q, amplitude: amp, fill: t.color, stroke: none,
+    outer-inset: amp * 0.6, inner-outset: amp * 0.3, thickness: amp * 0.14)
   let ml = mb + dir * (opts.brace-size + opts.summary-gap)
   let anchor = if vertical { if dir > 0 { "south" } else { "north" } } else { if dir > 0 { "west" } else { "east" } }
   content(_xy(ml, u + (lo + hi) / 2, vertical), anchor: anchor,
@@ -338,11 +340,21 @@
       let p0 = _border(a, b, sizes.at(l.from))
       let p1 = _border(b, a, sizes.at(l.to))
       let (dx, dy) = (p1.at(0) - p0.at(0), p1.at(1) - p0.at(1))
-      let c = ((p0.at(0) + p1.at(0)) / 2 - dy * l.bend / 100%, (p0.at(1) + p1.at(1)) / 2 + dx * l.bend / 100%)
+      let mid = ((p0.at(0) + p1.at(0)) / 2, (p0.at(1) + p1.at(1)) / 2)
+      // `bend: auto` bows the curve away from the root, out of the map's
+      // busy middle; a given ratio bows to the left of the direction of
+      // travel, negative to the right.
+      let bend = if l.bend == auto {
+        let side = mid.at(0) * (-dy) + mid.at(1) * dx
+        if side >= 0 { 35% } else { -35% }
+      } else { l.bend }
+      let c = (mid.at(0) - dy * bend / 100%, mid.at(1) + dx * bend / 100%)
       let color = if l.color == auto { rgb("#555555") } else { l.color }
       let st = (paint: color, thickness: l.thickness, dash: l.dash, cap: "round")
-      let mark = if l.arrow == "both" { (start: "stealth", end: "stealth", fill: color) }
-        else if l.arrow == true { (end: "stealth", fill: color) } else { none }
+      // The heads keep a solid outline even on a dashed curve.
+      let head = (fill: color, stroke: (paint: color, thickness: l.thickness, dash: "solid"))
+      let mark = if l.arrow == "both" { (start: "stealth", end: "stealth") + head }
+        else if l.arrow == true { (end: "stealth") + head } else { none }
       if opts.theme.hand == none {
         bezier(p0, p1, c, stroke: st, mark: mark)
       } else {

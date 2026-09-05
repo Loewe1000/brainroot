@@ -176,3 +176,68 @@
   }
   t + (angle: angle, span: span, kids: kids)
 }
+
+
+// --- Arranging for cross-links ----------------------------------------------
+//
+// With `arrange: "links"` the first-level branches are ordered, and the
+// children of each branch possibly reversed, so that the nodes joined by
+// cross-links end up close together. The measured subtrees are enough for
+// that: an order only moves subtrees along the cross axis, so the
+// positions of every node can be worked out without measuring again.
+
+// Positions (m, u) of every node with an id in a subtree whose box has its
+// inner edge at m and its centre at u.
+#let _positions(t, m, u, dir, gap, acc) = {
+  if t.node.id != none { acc.insert(t.node.id, (m: m + dir * t.size-m / 2, u: u)) }
+  let m1 = m + dir * t.size-m + dir * gap
+  for k in t.kids { acc = _positions(k, m1, u + k.du, dir, gap, acc) }
+  acc
+}
+
+// The positions of a whole arrangement: `sides` is (right, left) for the
+// horizontal layouts, one side for the vertical ones.
+#let _arrangement-positions(sides, root-m, opts) = {
+  let acc = (root: (m: 0pt, u: 0pt))
+  for (dir, side) in sides {
+    let total = side.map(t => t.size).sum(default: 0pt) + opts.branch-gap * calc.max(side.len() - 1, 0)
+    let cu = -total / 2
+    for t in side {
+      acc = _positions(t, dir * (root-m + opts.root-gap), cu - t.lo, dir, opts.level-gap, acc)
+      cu += t.size + opts.branch-gap
+    }
+  }
+  acc
+}
+
+// The cost of an arrangement: the summed distance of the cross-links.
+#let _link-cost(links, pos) = {
+  let cost = 0pt
+  for l in links {
+    if l.from in pos and l.to in pos {
+      let (a, b) = (pos.at(l.from), pos.at(l.to))
+      let (dm, du) = ((a.m - b.m) / 1pt, (a.u - b.u) / 1pt)
+      cost += calc.sqrt(dm * dm + du * du) * 1pt
+    }
+  }
+  cost
+}
+
+// All orderings of an array (for a handful of branches).
+#let _permutations(xs) = {
+  if xs.len() <= 1 { return (xs,) }
+  let out = ()
+  for (i, x) in xs.enumerate() {
+    let rest = xs.slice(0, i) + xs.slice(i + 1)
+    for p in _permutations(rest) { out.push((x,) + p) }
+  }
+  out
+}
+
+// Reverses the children of a subtree, keeping the contour: the offsets
+// mirror around the centre.
+#let _reversed(t) = {
+  if t.kids.len() == 0 { return t }
+  t + (kids: t.kids.rev().map(k => k + (du: -k.du)),
+       contour: t.contour.map(c => (lo: -c.hi, hi: -c.lo)), lo: -t.hi, hi: -t.lo)
+}

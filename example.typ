@@ -185,8 +185,8 @@
 
 #pagebreak()
 // Querverbindungen, Klammern, Wolken
-#brainroot(title: [Fotosynthese],
-  links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted", arrow: "both")),
+#brainroot(title: [Fotosynthese], arrange: "links",
+  links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], dash: "dotted", arrow: "both")),
   branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten]), [ATP], [NADPH], id: "licht", cloud: true),
   branch([Dunkelreaktion], [Calvin-Zyklus], branch([Glucose], id: "glucose"), id: "dunkel", summary: [Produkte]),
   branch([Voraussetzungen], [Licht], [Wasser], branch([CO₂], id: "co2"), summary: [von außen], cloud: rgb("#fff4d6")))
