@@ -155,22 +155,27 @@
   // Pairs of ribs share a spine point; a pair's column is as wide as the
   // wider of the two needs.
   let pairs = range(calc.ceil(n / 2)).map(j => trees.slice(2 * j, calc.min(2 * j + 2, n)))
+  // What a rib needs: its length, how far the rib and its leaves reach to
+  // the left of the spine point, and how far the branch box may stick out
+  // to the right of it.
   let need(t) = {
     let leaves = t.kids.map(k => k.w + tick).fold(0pt, calc.max)
     let l = (t.kids.len() + 1) * (t.kids.map(k => k.h).fold(0pt, calc.max) + step)
     let l = calc.max(l, 3 * opts.level-gap)
-    (len: l, width: calc.max(t.w, leaves + l * calc.cos(lean)))
+    let run = l * calc.cos(lean)
+    (len: l, left: calc.max(run + t.w / 2, run + leaves), right: calc.max(0pt, t.w / 2 - run))
   }
   let cols = pairs.map(p => p.map(need))
-  let x = -(rm.w / 2 + opts.root-gap)
+  // The spine points, from the head leftwards: a pair's point sits at the
+  // right edge of what its ribs need, so no room is left over.
+  let x = -(rm.w / 2 + opts.level-gap)
   let xs = ()
   for (j, p) in pairs.enumerate() {
-    let w = cols.at(j).map(c => c.width).fold(0pt, calc.max)
-    x -= w / 2
+    x -= cols.at(j).map(c => c.right).fold(0pt, calc.max)
     xs.push(x)
-    x -= w / 2 + opts.branch-gap
+    x -= cols.at(j).map(c => c.left).fold(0pt, calc.max) + opts.branch-gap
   }
-  let x-end = x
+  let x-end = x + opts.branch-gap
   // Spine from the tail to the head.
   _seg((x-end, 0pt), (-rm.w / 2, 0pt), _stroke(0, opts.ink-dark, opts), opts)
   for (j, p) in pairs.enumerate() {
