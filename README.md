@@ -141,8 +141,9 @@ often each line is drawn).
 
 ## Manual
 
-The manual is available in German (`docs/docs.typ`) and English
-(`docs/manual-en.typ`); both build from `docs/` with
+The manual is online in [English](https://loewe1000.github.io/brainroot/en.html)
+and [German](https://loewe1000.github.io/brainroot/). Both build from `docs/`
+with
 
 ```bash
 typst compile docs/docs.typ docs/build --format bundle --features bundle,html --root /
