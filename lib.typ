@@ -764,8 +764,10 @@
 #let _edge-label(at, label, opts) = {
   import cetz.draw: content
   if label == none { return }
-  content(at, box(fill: opts.edge-label-fill, inset: 0.2em, radius: 0.2em,
-    text(size: 0.85em, fill: opts.ink-dark, label)))
+  // Edges "bounds": a fraction reaches above and below the line's usual
+  // cap height and baseline, and the box has to cover all of it.
+  content(at, box(fill: opts.edge-label-fill, inset: 0.25em, radius: 0.2em,
+    text(size: 0.85em, fill: opts.ink-dark, top-edge: "bounds", bottom-edge: "bounds", label)))
 }
 
 // Draws one node's box centred at (cx, cy), with its underline if the theme
