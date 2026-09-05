@@ -1,8 +1,13 @@
+<img src="assets/logo-map.svg" alt="brainroot: the word as the root of a small mind map with six coloured branches" width="520">
+
 # brainroot
 
-`brainroot` draws two-sided mind maps: the root in the middle, branches to
-the right and left, each branch in its own colour down to its leaves. The
-layout is automatic and the boxes size themselves to their text.
+**Mind maps for Typst.** Write a nested list, get a map: the root in the
+middle, every branch in its own colour down to its leaves, boxes sized to
+their text, curves that meet where they should. Six layouts, ten themes,
+ten palettes, and a hand-drawn mode in pure Typst.
+
+![A two-sided mind map of the forms of energy in the default theme](assets/example-soft.svg)
 
 ## Usage
 
@@ -65,6 +70,11 @@ as arguments.
 
 ## Layouts
 
+<p>
+<img src="assets/example-radial.svg" alt="Radial layout, ocean palette" width="49%">
+<img src="assets/example-down.svg" alt="Top-down layout in the blocks theme, sunset palette" width="49%">
+</p>
+
 | `layout` | |
 | --- | --- |
 | `both` | root in the middle, branches right and left (default) |
@@ -78,6 +88,8 @@ order is kept on both sides. With `radial` the first branch sits at `start`,
 the others follow clockwise; the radius grows until no subtrees overlap.
 
 ## Palettes
+
+![The ten palettes on the same small map](assets/palettes.svg)
 
 | `palette` | |
 | --- | --- |
@@ -97,6 +109,8 @@ Your own colours: `palette: (red, blue, green)`, or with a root colour
 
 ## Themes
 
+![The ten themes on the same small map](assets/themes.svg)
+
 A theme decides how boxes and edges look. The colours still come from the
 palette.
 
@@ -112,6 +126,11 @@ palette.
 | `scribble` | no fill, drawn twice | wobbly curves |
 | `marker` | solid colour, felt-tip | wide wobbly straight lines |
 | `pencil` | thin, pencil | shaky right angles |
+
+<p>
+<img src="assets/example-hand.svg" alt="The hand theme with a handwriting font" width="49%">
+<img src="assets/example-lines.svg" alt="The lines theme, forest palette" width="49%">
+</p>
 
 The four hand-drawn themes wobble every line after the TikZ decoration
 `sketch`: along the path, with reproducible randomness. A handwriting font
@@ -150,6 +169,14 @@ typst compile docs/docs.typ docs/build --format bundle --features bundle,html --
 ```
 
 and need `@schule/schuldocs` from [Typst-Schule](https://github.com/Loewe1000/Typst-Schule).
+
+## Pictures and logo
+
+Everything under `assets/` is drawn by brainroot itself; `assets/build.sh`
+renders the SVGs. The logo comes in five variants: `logo-map` (the word as
+root of a small map), `logo-hand` (the same, hand-drawn), `logo-lines`
+(bare lines), `logo-roots` (the roots, top-down) and `logo-mark` (a square
+mark without words, for icons).
 
 ## License
 
