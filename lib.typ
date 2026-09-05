@@ -64,6 +64,10 @@
   /// `star` layouts.
   /// -> bool | color | none
   cloud: none,
+  /// Points this node is worth when a map is graded; `brainroot-points()`
+  /// adds them up and `show-points: true` shows them as a badge.
+  /// -> int | float | none
+  points: none,
 ) = (
   brainroot-node: true,
   label: label,
@@ -80,6 +84,7 @@
   id: id,
   summary: summary,
   cloud: cloud,
+  points: points,
 )
 
 /// A connection between two nodes that are not parent and child, drawn over
@@ -236,7 +241,9 @@
 //
 // A theme decides how boxes and edges look; the colours still come from
 // the palette. Fields:
-//   edge      "curve" | "elbow" | "straight"   routing of the edges
+//   edge      "curve" | "elbow" | "straight" | "taper" | "comb"   routing
+//             of the edges: taper is a curve that thins towards the child,
+//             comb a shared spine with a twig to every child
 //   fill      "tint" | "solid" | "white" | "none"   fill of the boxes
 //   stroke    border width of the boxes (0pt = no border)
 //   radius    corner radius (may be relative, 50% = pill)
@@ -253,7 +260,10 @@
 //   shape     "rect" | "circle" | "ellipse"   shape of the boxes
 //   size      `none`, or an array of lengths per depth: a fixed diameter
 //             (width for ellipses) instead of a size fitted to the text
+//   taper     for `edge: "taper"`: (start, end) factors on the level's
+//             `thickness` at the parent and at the child
 //   root      overrides for the root only (fill, stroke, radius, shape, size)
+//   branches  the same overrides for the first level only
 
 /// The built-in themes: `soft`, `outline`, `blocks`, `lines`, `sketch`,
 /// `bubbles`, `hand`, `scribble`, `marker`, `pencil`. Each is a dictionary
@@ -296,9 +306,18 @@
   pencil: (edge: "elbow", fill: "white", stroke: 0.6pt, radius: 2pt, underline: false, dash: "solid",
            hand: (amplitude: 0.35, wavelength: 30, randomness: 3, segment: 1, passes: 1),
            root: (stroke: 1pt)),
+  // Organic: branches that thin out towards the leaves, after Buzan and the
+  // TikZ mindmap library; pastel boxes.
+  organic: (edge: "taper", fill: "tint", stroke: 0pt, radius: 50%, underline: false, dash: "solid",
+            root: (fill: "solid")),
+  // Twigs: white circles on the first level, bare text at the leaves,
+  // attached by a shared spine with a twig to each -- the infographic look.
+  twigs: (edge: "comb", fill: "none", stroke: 0pt, radius: 0pt, underline: false, dash: "solid",
+          root: (fill: "solid", radius: 50%, shape: "circle"),
+          branches: (fill: "white", stroke: 0.09em, shape: "circle")),
 )
 
-#let _theme-defaults = (font: none, hand: none, shape: "rect", size: none)
+#let _theme-defaults = (font: none, hand: none, shape: "rect", size: none, branches: (:), taper: (2.4, 0.4))
 
 #let _theme(t) = {
   if type(t) == str {
@@ -311,7 +330,7 @@
     let hand = if type(t.at("hand", default: none)) == dictionary {
       (if base.hand == none { (:) } else { base.hand }) + t.hand
     } else { t.at("hand", default: base.hand) }
-    base + t + (root: base.root + t.at("root", default: (:)), hand: hand)
+    base + t + (root: base.root + t.at("root", default: (:)), branches: base.branches + t.at("branches", default: (:)), hand: hand)
   } else {
     panic("brainroot: theme must be a string or a dictionary")
   }
@@ -374,10 +393,12 @@
 // Everything the theme and the node decide about a box: fill, border,
 // radius, shape, fixed size, text colour and weight. Shared by the box
 // itself and by the hand-drawn outline, so both agree.
+#let _spec(depth, th) = if depth == 0 { th + th.root } else if depth == 1 { th + th.branches } else { th }
+
 #let _paint(node, depth, color, opts) = {
   let th = opts.theme
   let root = depth == 0
-  let spec = if root { th + th.root } else { th }
+  let spec = _spec(depth, th)
   let color = if root { opts.root-fill } else { color }
   let fill = if node.fill == auto { _fill(spec.fill, color, opts) } else { node.fill }
   let stroke = if spec.underline and not root { none }
@@ -602,7 +623,7 @@
 // Must be called inside `context`.
 #let _measure-node(node, depth, color, opts) = {
   let th = opts.theme
-  let spec = if depth == 0 { th + th.root } else { th }
+  let spec = _spec(depth, th)
   let natural = measure(_nodebox(node, depth, color, opts))
   let words = _words(node.label)
   let floor = if words == none { none } else {
@@ -769,6 +790,34 @@
   dash: opts.theme.dash,
 )
 
+// A tapered edge: a filled ribbon along the curve, `taper.at(0)` times the
+// level's thickness at the parent, `taper.at(1)` times at the child.
+#let _taper(p0, c0, c1, p1, st, opts) = {
+  import cetz.draw: line
+  let n(p) = (_pt(p.at(0)), _pt(p.at(1)))
+  let pts = _flatten-bezier(n(p0), n(c0), n(c1), n(p1), n: 32)
+  let w = _pt(st.thickness)
+  let (w0, w1) = (w * opts.theme.taper.at(0), w * opts.theme.taper.at(1))
+  let left = ()
+  let right = ()
+  for (i, p) in pts.enumerate() {
+    let (a, b) = if i == 0 { (pts.at(0), pts.at(1)) } else { (pts.at(i - 1), p) }
+    let (dx, dy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
+    let len = calc.max(calc.sqrt(dx * dx + dy * dy), 1e-9)
+    let (nx, ny) = (-dy / len, dx / len)
+    let t = i / (pts.len() - 1)
+    let h = (w0 + (w1 - w0) * t) / 2
+    left.push((p.at(0) + nx * h, p.at(1) + ny * h))
+    right.push((p.at(0) - nx * h, p.at(1) - ny * h))
+  }
+  let hand = opts.theme.hand
+  if hand != none {
+    left = _wobble(left, hand, _seed(..pts.first(), ..pts.last()))
+    right = _wobble(right, hand, _seed(..pts.last(), ..pts.first()))
+  }
+  line(..left, ..right.rev(), close: true, fill: st.paint, stroke: none)
+}
+
 // From axis coordinates (m, u) to (x, y).
 #let _xy(m, u, vertical) = if vertical { (u, m) } else { (m, -u) }
 
@@ -776,26 +825,35 @@
 // it is first flattened to a polyline and then wobbled.
 #let _path(p0, c0, c1, p1, st, opts) = {
   import cetz.draw: bezier, line
+  let edge = opts.theme.edge
+  if edge == "taper" { return _taper(p0, c0, c1, p1, st, opts) }
   let hand = opts.theme.hand
   if hand == none {
-    if opts.theme.edge == "curve" {
+    if edge == "curve" {
       bezier(p0, p1, c0, c1, stroke: st)
-    } else if opts.theme.edge == "elbow" {
+    } else if edge in ("elbow", "comb") {
       line(p0, c0, c1, p1, stroke: st)
     } else {
       line(p0, p1, stroke: st)
     }
   } else {
     let n(p) = (_pt(p.at(0)), _pt(p.at(1)))
-    let pts = if opts.theme.edge == "curve" {
+    let pts = if edge == "curve" {
       _flatten-bezier(n(p0), n(c0), n(c1), n(p1))
-    } else if opts.theme.edge == "elbow" {
+    } else if edge in ("elbow", "comb") {
       (n(p0), n(c0), n(c1), n(p1))
     } else {
       (n(p0), n(p1))
     }
     _hand-line(pts, st, hand, _seed(..n(p0), ..n(p1)))
   }
+}
+
+// A plain line segment, hand-drawn if the theme is.
+#let _seg(a, b, st, opts) = {
+  import cetz.draw: line
+  if opts.theme.hand == none { line(a, b, stroke: st) }
+  else { _hand-line(((_pt(a.at(0)), _pt(a.at(1))), (_pt(b.at(0)), _pt(b.at(1)))), st, opts.theme.hand, _seed(_pt(a.at(0)), _pt(a.at(1)), _pt(b.at(0)))) }
 }
 
 // An edge from p0 to p1 in the theme's routing; the curve runs parallel to
@@ -843,6 +901,12 @@
   let id = if t.depth == 0 { "root" } else { t.node.id }
   content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width)),
     name: if id == none { none } else { "n-" + id })
+  if opts.show-points and t.node.points != none {
+    // A badge at the top right corner of the box.
+    content((cx + t.w / 2, cy + t.h / 2), anchor: "center",
+      std.circle(radius: 0.55em, fill: opts.ink-dark, stroke: 0.1em + white,
+        align(center + horizon, text(size: 0.6em, fill: white, weight: "bold", str(t.node.points)))))
+  }
   if opts.theme.underline and t.depth > 0 {
     // The underline is a line of its own in the width of the edge flowing
     // into it; as a box border it would have a different width and sit
@@ -877,7 +941,8 @@
 // A brace beyond the children of a node, spanning them, with its label.
 #let _summary(t, m1, u, dir, opts, vertical) = {
   import cetz.draw: *
-  let inner = t.kids.map(k => k.extent).fold(0pt, calc.max)
+  let inner = if opts.levels == none { t.kids.map(k => k.extent).fold(0pt, calc.max) }
+    else { t.extent - t.pad - (opts.levels.at(t.depth + 1) - opts.levels.at(t.depth)) - opts.summary-gap * 2 - opts.brace-size - (if t.summary == none { 0pt } else if vertical { t.summary.h } else { t.summary.w }) }
   let mb = m1 + dir * (inner + opts.summary-gap)
   let lo = t.kids.map(k => k.du + k.lo).fold(0pt, calc.min)
   let hi = t.kids.map(k => k.du + k.hi).fold(0pt, calc.max)
@@ -893,22 +958,52 @@
     text(size: 0.9em, fill: t.color.darken(20%), t.node.summary))
 }
 
+// The deepest level in a subtree.
+#let _deepest(t) = if t.kids.len() == 0 { t.depth } else { t.kids.map(_deepest).fold(t.depth, calc.max) }
+
 #let _draw-tree(t, m, u, dir, opts, vertical) = {
   import cetz.draw: *
+  if t.at("hidden", default: false) { return }
   let ul = opts.theme.underline and not vertical
   let anchor(tree, cu) = if ul { cu + tree.size-u / 2 } else { cu }
   let m0 = m + dir * t.size-m
-  let m1 = m0 + dir * opts.level-gap
+  // `levels` (align-levels) puts every level on one line across all
+  // branches; otherwise a child follows its parent at `level-gap`.
+  let m1 = if opts.levels == none { m0 + dir * opts.level-gap } else { dir * opts.levels.at(t.depth + 1, default: 0pt) }
+  let t = if opts.levels == none { t } else {
+    // With aligned levels the subtree reaches to the end of its deepest
+    // level, not to the sum of its own boxes.
+    let d = _deepest(t)
+    t + (extent: opts.levels.at(d) + opts.level-sizes.at(d) - opts.levels.at(t.depth) + t.pad)
+  }
   if t.node.cloud != none { _cloud(t, m, u, dir, opts, vertical) }
   if t.summary != none { _summary(t, m1, u, dir, opts, vertical) }
-  for k in t.kids {
-    let ku = u + k.du
-    let p0 = _xy(m0, anchor(t, u), vertical)
-    let p1 = _xy(m1, anchor(k, ku), vertical)
-    let (c0, c1) = _controls(p0, p1, vertical)
-    _path(p0, c0, c1, p1, _stroke(k.depth - 1, k.color, opts), opts)
-    _edge-label(_mid(p0, c0, c1, p1), k.node.edge-label, opts)
-    _draw-tree(k, m1, ku, dir, opts, vertical)
+  if opts.theme.edge == "comb" and t.kids.len() > 0 {
+    // Comb: one stem out of the parent, a spine across the children, a
+    // twig into each of them.
+    let st = _stroke(t.kids.first().depth - 1, t.color, opts)
+    let ms = m0 + dir * opts.level-gap * 0.55
+    let us = t.kids.map(k => anchor(k, u + k.du))
+    _seg(_xy(m0, anchor(t, u), vertical), _xy(ms, anchor(t, u), vertical), st, opts)
+    _seg(_xy(ms, calc.min(anchor(t, u), ..us), vertical), _xy(ms, calc.max(anchor(t, u), ..us), vertical), st, opts)
+    for k in t.kids {
+      let ku = u + k.du
+      let p0 = _xy(ms, anchor(k, ku), vertical)
+      let p1 = _xy(m1, anchor(k, ku), vertical)
+      _seg(p0, p1, _stroke(k.depth - 1, k.color, opts), opts)
+      _edge-label(((p0.at(0) + p1.at(0)) / 2, (p0.at(1) + p1.at(1)) / 2), k.node.edge-label, opts)
+      _draw-tree(k, m1, ku, dir, opts, vertical)
+    }
+  } else {
+    for k in t.kids {
+      let ku = u + k.du
+      let p0 = _xy(m0, anchor(t, u), vertical)
+      let p1 = _xy(m1, anchor(k, ku), vertical)
+      let (c0, c1) = _controls(p0, p1, vertical)
+      _path(p0, c0, c1, p1, _stroke(k.depth - 1, k.color, opts), opts)
+      _edge-label(_mid(p0, c0, c1, p1), k.node.edge-label, opts)
+      _draw-tree(k, m1, ku, dir, opts, vertical)
+    }
   }
   // The box after the edges, so it covers their ends.
   let (cx, cy) = _xy(m + dir * t.size-m / 2, u, vertical)
@@ -918,7 +1013,10 @@
 // Edge from the root to a branch: leaves the root towards the branch and
 // arrives parallel to the main axis.
 #let _root-controls(p1, m-inner, opts, vertical) = {
-  if opts.theme.edge != "curve" or vertical {
+  if opts.theme.edge == "comb" {
+    // Straight from the root, as the twigs are straight too.
+    ((0pt, 0pt), p1)
+  } else if opts.theme.edge not in ("curve", "taper") or vertical {
     // Vertically the S-curve with its inflection at half height is calmest.
     _controls((0pt, 0pt), p1, vertical)
   } else {
@@ -940,9 +1038,11 @@
   for t in side {
     let tu = cu - t.lo
     let au = if opts.theme.underline and not vertical { tu + t.size-u / 2 } else { tu }
-    _root-edge(_xy(m1, au, vertical), dir * m-inner, _stroke(0, t.color, opts), opts, vertical,
-      label: t.node.edge-label)
-    _draw-tree(t, m1, tu, dir, opts, vertical)
+    if not t.at("hidden", default: false) {
+      _root-edge(_xy(m1, au, vertical), dir * m-inner, _stroke(0, t.color, opts), opts, vertical,
+        label: t.node.edge-label)
+      _draw-tree(t, m1, tu, dir, opts, vertical)
+    }
     cu += t.size + opts.branch-gap
   }
 }
@@ -992,6 +1092,7 @@
 
   for i in range(n) {
     let (a, d, t) = (angles.at(i), dirs.at(i), trees.at(i))
+    if t.at("hidden", default: false) { continue }
     let (px, py) = inner(i, r)
     let st = _stroke(0, t.color, opts)
     if calc.abs(calc.cos(a)) < 0.2 and opts.theme.edge == "curve" {
@@ -1121,13 +1222,68 @@
     _edge-label(_mid(parent, c0, c1, p), t.node.edge-label, opts)
     for k in t.kids { draw(k, p, t.angle) }
   }
-  for t in placed { draw(t, (0pt, 0pt), t.angle) }
+  let shown = placed.filter(t => not t.at("hidden", default: false))
+  for t in shown { draw(t, (0pt, 0pt), t.angle) }
   let boxes(t) = {
     let (x, y) = pos(t, f)
     _draw-node(t, x, y, opts)
     for k in t.kids { boxes(k) }
   }
-  for t in placed { boxes(t) }
+  for t in shown { boxes(t) }
+}
+
+// Fishbone (Ishikawa): the root is the head at the right end of a spine,
+// the branches are ribs leaning towards it, alternating above and below,
+// their children hang off the rib as leaves with a short tick. Two levels
+// below the root; deeper nodes are not drawn.
+#let _draw-fishbone(trees, rm, opts) = {
+  import cetz.draw: *
+  let n = trees.len()
+  if n == 0 { return }
+  let tick = opts.level-gap * 0.4
+  let step = opts.sibling-gap
+  let lean = 60deg
+  // Pairs of ribs share a spine point; a pair's column is as wide as the
+  // wider of the two needs.
+  let pairs = range(calc.ceil(n / 2)).map(j => trees.slice(2 * j, calc.min(2 * j + 2, n)))
+  let need(t) = {
+    let leaves = t.kids.map(k => k.w + tick).fold(0pt, calc.max)
+    let l = (t.kids.len() + 1) * (t.kids.map(k => k.h).fold(0pt, calc.max) + step)
+    let l = calc.max(l, 3 * opts.level-gap)
+    (len: l, width: calc.max(t.w, leaves + l * calc.cos(lean)))
+  }
+  let cols = pairs.map(p => p.map(need))
+  let x = -(rm.w / 2 + opts.root-gap)
+  let xs = ()
+  for (j, p) in pairs.enumerate() {
+    let w = cols.at(j).map(c => c.width).fold(0pt, calc.max)
+    x -= w / 2
+    xs.push(x)
+    x -= w / 2 + opts.branch-gap
+  }
+  let x-end = x
+  // Spine from the tail to the head.
+  _seg((x-end, 0pt), (-rm.w / 2, 0pt), _stroke(0, opts.ink-dark, opts), opts)
+  for (j, p) in pairs.enumerate() {
+    for (i, t) in p.enumerate() {
+      if t.at("hidden", default: false) { continue }
+      let side = if i == 0 { 1 } else { -1 }
+      let l = cols.at(j).at(i).len
+      let sx = xs.at(j)
+      let tip = (sx - l * calc.cos(lean), side * l * calc.sin(lean))
+      _seg((sx, 0pt), tip, _stroke(0, t.color, opts), opts)
+      // Leaves along the rib, a tick to the left of it.
+      for (k, kid) in t.kids.enumerate() {
+        let f = (k + 1) / (t.kids.len() + 1)
+        let at = (sx - l * f * calc.cos(lean), side * l * f * calc.sin(lean))
+        let end = (at.at(0) - tick, at.at(1))
+        _seg(at, end, _stroke(kid.depth - 1, kid.color, opts), opts)
+        _edge-label(((at.at(0) + end.at(0)) / 2, at.at(1)), kid.node.edge-label, opts)
+        _draw-node(kid, end.at(0) - kid.w / 2, end.at(1), opts)
+      }
+      _draw-node(t, tip.at(0), tip.at(1) + side * t.h / 2, opts)
+    }
+  }
 }
 
 // The box sizes of every node with an id, for the cross-links.
@@ -1177,6 +1333,34 @@
       }
     })
   }
+}
+
+// The tree as one line of text, for the alternative text.
+#let _plain(c) = {
+  if type(c) == str { c } else if type(c) != content { repr(c) }
+  else if c.has("text") { c.text }
+  else if c.has("children") { c.children.map(_plain).join("") }
+  else if c.has("body") { _plain(c.body) }
+  else if c.func() == [ ].func() { " " } else { "" }
+}
+#let _outline(root, trees) = {
+  let sub(t) = if t.kids.len() == 0 { _plain(t.node.label) }
+    else { _plain(t.node.label) + " (" + t.kids.map(sub).join(", ") + ")" }
+  _plain(root.label) + ": " + trees.map(sub).join("; ")
+}
+
+/// Adds up the `points` of every node in a map. Takes the same branches,
+/// lists and `title` as `brainroot()`, so the call can be repeated with the
+/// same arguments, or the arguments kept in a variable and spread.
+///
+/// -> int | float
+#let brainroot-points(..branches, title: none) = {
+  let walk(n) = {
+    let n = _norm(n)
+    let own = if n.points == none { 0 } else { n.points }
+    own + n.kids.map(walk).sum(default: 0)
+  }
+  branches.pos().map(_expand).flatten().map(walk).sum(default: 0)
 }
 
 /// Draws the mind map. The first-level branches come as positional
@@ -1324,6 +1508,23 @@
   /// Space between a cloud and the boxes inside it.
   /// -> length
   cloud-pad: 0.6em,
+  /// Shows each node's `points` as a badge on its box.
+  /// -> bool
+  show-points: false,
+  /// Which first-level branches are drawn: `auto` all, an integer the first
+  /// so many, or a function of the branch index (from 0) returning a bool.
+  /// The layout stays the same, so a map can build up branch by branch --
+  /// in typstage: `build(from => brainroot(..., reveal: i => from(i + 2)))`.
+  /// -> auto | int | function
+  reveal: auto,
+  /// Puts every level on one line across all branches, as in an org chart.
+  /// Tree layouts only.
+  /// -> bool
+  align-levels: false,
+  /// Alternative text for the map in tagged PDFs and HTML: `auto` writes
+  /// the tree out as text, a string is used as given, `none` adds nothing.
+  /// -> auto | str | none
+  alt: auto,
 ) = context {
   // Lengths in em follow the surrounding font size, so a map in a footnote
   // and a map on a poster keep their proportions. Resolve them once here.
@@ -1335,7 +1536,7 @@
   let max-width = abs(max-width)
   let thickness = thickness.map(abs)
   let inset = if type(inset) == dictionary { inset.pairs().map(((k, v)) => (k, abs(v))).to-dict() } else { abs(inset) }
-  let layouts = ("both", "right", "left", "down", "up", "radial", "star")
+  let layouts = ("both", "right", "left", "down", "up", "radial", "star", "fishbone")
   assert(layout in layouts, message: "brainroot: layout must be one of " + layouts.join(", "))
   let vertical = layout in ("down", "up")
   let theme = _theme(theme)
@@ -1353,6 +1554,7 @@
     shade: shade, blanks: blanks, solution: solution, solution-ink: solution-ink,
     edge-label-fill: edge-label-fill,
     brace-size: abs(brace-size), summary-gap: abs(summary-gap), cloud-pad: abs(cloud-pad),
+    show-points: show-points, levels: none, level-sizes: none,
   )
   let args = branches.pos()
   let root = title
@@ -1367,13 +1569,26 @@
   let trees = args.map(_expand).flatten().enumerate().map(((i, b)) => {
     let b = _norm(b)
     let c = if b.color != none { b.color } else { palette.colors.at(calc.rem(i, palette.colors.len())) }
-    _measure-tree(b, 1, c, opts, vertical)
+    let t = _measure-tree(b, 1, c, opts, vertical)
+    let hidden = if reveal == auto { false } else if type(reveal) == int { i >= reveal } else { not reveal(i) }
+    t + (hidden: hidden)
   })
+  // Aligned levels: one line per depth, from the largest box on each.
+  if align-levels and layout not in ("radial", "star", "fishbone") {
+    let sizes = _level-sizes((depth: 0, w: rm.w, h: rm.h, kids: trees), ())
+    let size-m = sizes.map(z => if vertical { z.h } else { z.w })
+    let levels = (0pt, (if vertical { rm.h } else { rm.w }) / 2 + root-gap)
+    for d in range(2, sizes.len()) { levels.push(levels.at(d - 1) + size-m.at(d - 1) + level-gap) }
+    opts.levels = levels
+    opts.level-sizes = size-m
+  }
 
   let canvas = cetz.canvas(length: 1pt, {
     import cetz.draw: *
     if layout == "radial" {
       _draw-radial(trees, rm, start, opts)
+    } else if layout == "fishbone" {
+      _draw-fishbone(trees, rm, opts)
     } else if layout == "star" {
       _draw-star(trees, rm, start, opts)
     } else if vertical {
@@ -1397,6 +1612,11 @@
 
   let canvas = if background == none { canvas } else {
     block(fill: background, inset: abs(padding), radius: 0.6em, canvas)
+  }
+  // Alternative text: the tree written out, unless given or declined.
+  let canvas = if alt == none { canvas } else {
+    let text = if alt == auto { _outline(root-node, trees) } else { alt }
+    figure(kind: "brainroot", supplement: none, alt: text, canvas)
   }
   if width == auto and zoom == 100% { return canvas }
   // Scale the finished drawing as a whole, text included, so `width` and

@@ -28,6 +28,21 @@
   with a label beyond a node's children; `cloud: true` or a colour draws a
   soft cloud behind the subtree. Both in the tree layouts, not in `radial`
   and `star`.
+- **Points.** `branch(..., points: 2)`, `show-points: true` for a badge on
+  the box, `brainroot-points(...)` to add them up.
+- **Building up.** `reveal: 3` draws the first three branches, a function
+  of the branch index picks freely; the layout stays put, so a map can
+  build up branch by branch, in typstage with `build(from => ...)`.
+- **Two more themes.** `organic`: edges that thin out towards the leaves
+  (`edge: "taper"`, `taper:` factors). `twigs`: circles on the first
+  level, bare leaves on a shared spine with a twig each (`edge: "comb"`).
+  Themes can override the first level with `branches:`.
+- **Fishbone.** `layout: "fishbone"`: the root as the head of a spine,
+  branches as ribs alternating above and below, leaves along the ribs.
+- **Aligned levels.** `align-levels: true` puts every level on one line
+  across all branches, as in an org chart.
+- **Alternative text.** The map is a figure with `alt` text, written out
+  from the tree by default, for tagged PDFs; `alt:` sets or declines it.
 
 
 ## [0.1.0] — 2026-09-05

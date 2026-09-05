@@ -195,3 +195,28 @@
   links: (connect("licht", "dunkel", label: [ATP]),),
   branch([Lichtreaktion], [Fotolyse], [ATP], id: "licht", cloud: true),
   branch([Dunkelreaktion], [Calvin-Zyklus], [Glucose], id: "dunkel", summary: [Produkte]))
+
+#pagebreak()
+// organic, twigs, fishbone, align-levels, points, reveal
+#brainroot(title: [Energiearten], theme: "organic", karte)
+#v(5mm)
+#brainroot(title: [Wasserkreislauf], theme: "twigs", layout: "star", palette: "ocean", icon: text(size: 2em, emoji.drop), icon-at: "top",
+  branch([Verdunstung], [Sonne erwärmt Wasser], [Wasser wird zu Dampf], [Dampf steigt auf]),
+  branch([Kondensation], [Dampf kühlt ab], [Tröpfchen bilden sich], [Wolken entstehen]),
+  branch([Niederschlag], [Tropfen werden schwer], [Regen, Schnee, Hagel]),
+  branch([Sammlung], [Wasser sammelt sich], [Flüsse und Seen]))
+#pagebreak()
+#brainroot(title: [Schlechte Note], layout: "fishbone", theme: "outline",
+  branch([Vorbereitung], [zu spät begonnen], [ohne Plan], [kein Üben]),
+  branch([Unterricht], [gefehlt], [nicht mitgeschrieben]),
+  branch([Prüfung], [Zeit falsch eingeteilt], [Aufgabe falsch gelesen]),
+  branch([Umfeld], [Lärm], [Müdigkeit]))
+#v(5mm)
+#let stoffe = (
+  branch([Reinstoffe], branch([Elemente], branch([Metalle], points: 1), branch([Nichtmetalle], points: 1)), branch([Verbindungen], points: 2)),
+  branch([Gemische], branch([homogen], points: 1), branch([heterogen], points: 1)),
+)
+#brainroot(title: [Stoffe], layout: "down", theme: "blocks", align-levels: true, show-points: true, ..stoffe)
+Punkte: #brainroot-points(..stoffe)
+#v(5mm)
+#brainroot(title: [Energiearten], reveal: 2, karte)

@@ -198,6 +198,33 @@ in `radial` and `star`.
   width: 100%,
 )
 
+== Points and building up
+
+`points` on a branch counts for grading a map; `brainroot-points` with the
+same arguments adds them up, `show-points: true` shows them as a badge on
+the box. `reveal` draws only the first branches, or those for which a
+function of the index is true. The layout stays put, so a map builds up
+branch by branch, in typstage with
+`build(from => brainroot(..., reveal: i => from(i + 2)), steps: 5)`.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Forms of energy], reveal: 2, show-points: true,
+      branch([Kinetic energy], branch([Motion], points: 1), branch([Wind], points: 1)),
+      branch([Elastic energy], branch([Stretching], points: 2)),
+      branch([Thermal energy], [Fire]))
+  },
+  source: ```typ
+#brainroot(title: [Forms of energy], reveal: 2, show-points: true,
+  branch([Kinetic energy], branch([Motion], points: 1), branch([Wind], points: 1)),
+  branch([Elastic energy], branch([Stretching], points: 2)),
+  branch([Thermal energy], [Fire]))
+  ```,
+  width: 100%,
+)
+
 = Layouts
 
 `layout` decides how the branches sit around the root. `both` is the
@@ -206,7 +233,10 @@ two-sided map from above, `right` and `left` put everything on one side.
 org chart. `radial` is the classic Buzan mind map: the whole tree fans out
 from the root, every subtree in a sector of its own. `star` only puts the
 branches on a circle around the root, their subtrees grow horizontally
-outward.
+outward. `fishbone` is the Ishikawa cause-and-effect diagram: the root as
+the head of a spine, the branches as ribs alternating above and below, the
+leaves along the ribs; two levels below the root. `align-levels: true` puts
+every level on one line in the tree layouts, as in an org chart.
 
 
 #show-example(
@@ -245,6 +275,42 @@ outward.
   source: ```typ
 #brainroot(title: [Forms of energy], layout: "star", map,
   branch([Pressure]), branch([Radiation], [Light]))
+  ```,
+  width: 100%,
+)
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Bad grade], layout: "fishbone", theme: "outline",
+      branch([Preparation], [started late], [no plan], [no practice]),
+      branch([Lessons], [absent], [no notes]),
+      branch([Exam], [time misjudged], [task misread]),
+      branch([Setting], [noise], [tiredness]))
+  },
+  source: ```typ
+#brainroot(title: [Bad grade], layout: "fishbone", theme: "outline",
+  branch([Preparation], [started late], [no plan], [no practice]),
+  branch([Lessons], [absent], [no notes]),
+  branch([Exam], [time misjudged], [task misread]),
+  branch([Setting], [noise], [tiredness]))
+  ```,
+  width: 100%,
+)
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Substances], layout: "down", theme: "blocks", align-levels: true,
+      branch([Pure substances], branch([Elements], [Metals], [Non-metals]), [Compounds]),
+      branch([Mixtures], [homogeneous], [heterogeneous]))
+  },
+  source: ```typ
+#brainroot(title: [Substances], layout: "down", theme: "blocks", align-levels: true,
+  branch([Pure substances], branch([Elements], [Metals], [Non-metals]), [Compounds]),
+  branch([Mixtures], [homogeneous], [heterogeneous]))
   ```,
   width: 100%,
 )
@@ -307,6 +373,8 @@ palette. Ten are built in:
   scribble: [Scribbled: no fill, every line drawn twice.],
   marker: [Felt-tip: solid colour, wide straight strokes with a long wobble.],
   pencil: [Pencil: thin lines with a fine tremor, right angles.],
+  organic: [Organic after Buzan: branches that thin out towards the leaves, pastel pills.],
+  twigs: [Twigs: white circles on the first level, bare leaves on a shared spine with a twig each, the infographic look.],
 ) [
   == #raw(name)
   #description
@@ -402,7 +470,9 @@ drawn). Any theme can be made hand-drawn with it:
 == Adapting a theme
 
 A dictionary overrides individual fields; `base` picks the starting theme,
-otherwise `soft`. Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`),
+otherwise `soft`. Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`,
+`"taper"`, `"comb"`), `taper` (factors for the thinning), `branches`
+(overrides for the first level only),
 `fill` (`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke`, `radius`,
 `shape`, `size`, `underline`, `dash`, `font`, `hand` and `root` with overrides
 for the root only. `layout` puts all branches on one side.
@@ -445,6 +515,17 @@ for the root only. `layout` puts all branches on one side.
 - `shade` steps the branch colour per level, `20%` lighter towards the
   leaves, `-20%` darker. `background` paints a colour behind the map,
   `padding` the space around it.
+
+= Accessibility and performance
+
+The map is a figure with alternative text: `alt: auto` writes the tree out
+as text, a string is used as given, `none` leaves it out. Tagged PDFs thus
+carry the content of the map for screen readers too.
+
+A map of about 200 nodes compiles in a little over half a second,
+hand-drawn in about two; measuring the boxes and wobbling the lines are
+the two costs. Very large maps do not get slow, then, but they get hard to
+read, and that is the reason to split them.
 
 = Functions
 

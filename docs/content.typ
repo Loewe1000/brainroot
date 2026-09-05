@@ -202,6 +202,33 @@ Klammern und Wolken gibt es in den Baum-Anordnungen, nicht bei `radial` und
   width: 100%,
 )
 
+== Punkte und Aufbau
+
+`points` an einem Ast zählt für die Bewertung einer Karte; `brainroot-points`
+mit denselben Argumenten summiert sie, `show-points: true` zeigt sie als
+Marke am Kasten. `reveal` zeichnet nur die ersten Äste oder die, für die eine
+Funktion des Index wahr ist. Das Layout bleibt dabei, so baut sich eine Karte
+Ast für Ast auf, in typstage etwa mit
+`build(from => brainroot(..., reveal: i => from(i + 2)), steps: 5)`.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energiearten], reveal: 2, show-points: true,
+      branch([Bewegungsenergie], branch([Kinetische Energie], points: 1), branch([Windenergie], points: 1)),
+      branch([Spannenergie], branch([Dehnungsenergie], points: 2)),
+      branch([Wärmeenergie], [Feuerenergie]))
+  },
+  source: ```typ
+#brainroot(title: [Energiearten], reveal: 2, show-points: true,
+  branch([Bewegungsenergie], branch([Kinetische Energie], points: 1), branch([Windenergie], points: 1)),
+  branch([Spannenergie], branch([Dehnungsenergie], points: 2)),
+  branch([Wärmeenergie], [Feuerenergie]))
+  ```,
+  width: 100%,
+)
+
 = Anordnungen
 
 `layout` bestimmt, wie die Äste um die Wurzel liegen. `both` ist die
@@ -210,7 +237,11 @@ zweiseitige Karte von oben, `right` und `left` legen alles auf eine Seite.
 Organigramm. `radial` ist die klassische Mindmap nach Buzan: der ganze Baum
 fächert von der Wurzel aus, jeder Teilbaum bekommt seinen eigenen Sektor.
 `star` legt nur die Äste im Kreis um die Wurzel, die Teilbäume wachsen
-waagerecht nach außen.
+waagerecht nach außen. `fishbone` ist das Ursache-Wirkungs-Diagramm nach
+Ishikawa: die Wurzel als Kopf einer Gräte, die Äste als Rippen abwechselnd
+oben und unten, die Blätter entlang der Rippen; zwei Ebenen unter der
+Wurzel. `align-levels: true` setzt in den Baum-Anordnungen jede Ebene auf
+eine Linie, wie in einem Organigramm.
 
 
 #show-example(
@@ -249,6 +280,42 @@ waagerecht nach außen.
   source: ```typ
 #brainroot(title: [Energiearten], layout: "star", karte,
   branch([Druckenergie]), branch([Strahlungsenergie], [Lichtenergie]))
+  ```,
+  width: 100%,
+)
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Schlechte Note], layout: "fishbone", theme: "outline",
+      branch([Vorbereitung], [zu spät begonnen], [ohne Plan], [kein Üben]),
+      branch([Unterricht], [gefehlt], [nicht mitgeschrieben]),
+      branch([Prüfung], [Zeit falsch eingeteilt], [Aufgabe falsch gelesen]),
+      branch([Umfeld], [Lärm], [Müdigkeit]))
+  },
+  source: ```typ
+#brainroot(title: [Schlechte Note], layout: "fishbone", theme: "outline",
+  branch([Vorbereitung], [zu spät begonnen], [ohne Plan], [kein Üben]),
+  branch([Unterricht], [gefehlt], [nicht mitgeschrieben]),
+  branch([Prüfung], [Zeit falsch eingeteilt], [Aufgabe falsch gelesen]),
+  branch([Umfeld], [Lärm], [Müdigkeit]))
+  ```,
+  width: 100%,
+)
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Stoffe], layout: "down", theme: "blocks", align-levels: true,
+      branch([Reinstoffe], branch([Elemente], [Metalle], [Nichtmetalle]), [Verbindungen]),
+      branch([Gemische], [homogen], [heterogen]))
+  },
+  source: ```typ
+#brainroot(title: [Stoffe], layout: "down", theme: "blocks", align-levels: true,
+  branch([Reinstoffe], branch([Elemente], [Metalle], [Nichtmetalle]), [Verbindungen]),
+  branch([Gemische], [homogen], [heterogen]))
   ```,
   width: 100%,
 )
@@ -311,6 +378,8 @@ weiterhin aus der Palette. Zehn sind eingebaut:
   scribble: [Gekritzelt: keine Füllung, jede Linie zweimal gezogen.],
   marker: [Filzstift: volle Farbe, breite gerade Striche mit langem Wackeln.],
   pencil: [Bleistift: dünne Linien mit feinem Zittern, rechte Winkel.],
+  organic: [Organisch nach Buzan: Äste, die zu den Blättern hin dünner werden, Pillen in Pastell.],
+  twigs: [Zweige: weiße Kreise auf der ersten Ebene, kastenlose Blätter an einem gemeinsamen Stamm mit je einem Zweig, wie in Infografiken.],
 ) [
   == #raw(name)
   #beschreibung
@@ -406,7 +475,9 @@ Linie gezogen wird). Jedes Theme lässt sich damit handgezeichnet machen:
 == Ein Theme anpassen
 
 Ein Dictionary überschreibt einzelne Felder; `base` wählt das Ausgangstheme,
-sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`),
+sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`,
+`"taper"`, `"comb"`), `taper` (Faktoren für die Verjüngung), `branches`
+(Überschreibungen nur für die erste Ebene),
 `fill` (`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke`, `radius`,
 `shape`, `size`, `underline`, `dash`, `font`, `hand` und `root` mit
 Überschreibungen nur für die Wurzel. `layout` legt alle Äste auf eine Seite.
@@ -449,6 +520,18 @@ sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`),
 - `shade` stuft die Astfarbe je Ebene ab, `20%` heller zu den Blättern hin,
   `-20%` dunkler. `background` legt eine Farbe hinter die Karte, `padding`
   den Abstand dazu.
+
+= Barrierefreiheit und Leistung
+
+Die Karte ist eine Abbildung mit Alternativtext: `alt: auto` schreibt den
+Baum als Text aus, ein String gilt wie angegeben, `none` lässt ihn weg. So
+tragen PDFs mit Tags den Inhalt der Karte auch für Vorleseprogramme.
+
+Eine Karte mit etwa 200 Knoten übersetzt in gut einer halben Sekunde,
+handgezeichnet in etwa zwei; das Messen der Kästen und das Wackeln der
+Linien sind die beiden Posten. Sehr große Karten werden deshalb nicht
+langsam, aber sie werden unübersichtlich, und das ist der Grund, sie zu
+teilen.
 
 = Funktionen
 

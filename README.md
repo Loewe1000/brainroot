@@ -53,6 +53,7 @@ as arguments.
 - `blank: true`: an empty box at full size, filled in with `solution: true`.
 - `edge-label`: a small label on the edge into this node.
 - `id`: a name for cross-links; `summary`: a labelled brace beyond the children; `cloud`: `true` or a colour behind the subtree.
+- `points`: points for grading; `brainroot-points(...)` adds them up, `show-points: true` shows badges.
 
 Labels are content: formulas (`[$E = m c^2$]`), images and `link()` work.
 
@@ -83,6 +84,9 @@ Labels are content: formulas (`[$E = m c^2$]`), images and `link()` work.
 - `edge-label-fill`: background of edge labels. Default: `white`.
 - `links`: cross-links, each `connect(from, to, label: none, arrow: true, dash: "dashed", bend: 30%, color: auto)`, addressing nodes by `id` (`"root"` is the root).
 - `brace-size`, `summary-gap`, `cloud-pad`: sizes of braces and clouds.
+- `reveal`: `auto`, the number of first-level branches to draw, or a function of the index; the layout stays put.
+- `align-levels: true`: every level on one line, as in an org chart.
+- `alt`: alternative text for tagged PDFs; `auto` writes the tree out.
 - `width`: `auto` for the natural size, or a length or ratio of the surrounding block to scale the whole map to, text included.
 - `zoom`: a factor on the whole map, on top of `width`. Default: `100%`.
 
@@ -100,6 +104,7 @@ All lengths may be given in `em`; the defaults are, so a map follows the font si
 | `both` | root in the middle, branches right and left (default) |
 | `right`, `left` | all branches on one side |
 | `down`, `up` | tree from top to bottom or bottom to top |
+| `fishbone` | Ishikawa: root as the head of a spine, branches as ribs, leaves along them |
 | `radial` | the whole tree fans out from the root, every subtree in its own sector |
 | `star` | branches on a circle around the root, subtrees grow horizontally outward |
 
@@ -148,6 +153,8 @@ palette.
 | `scribble` | no fill, drawn twice | wobbly curves |
 | `marker` | solid colour, felt-tip | wide wobbly straight lines |
 | `pencil` | thin, pencil | shaky right angles |
+| `organic` | pastel pills | branches that thin out towards the leaves |
+| `twigs` | white circles, bare leaves | a spine with a twig to every leaf |
 
 <p>
 <img src="assets/example-hand.svg" alt="The hand theme with a handwriting font" width="49%">
@@ -166,12 +173,13 @@ A dictionary overrides individual fields of a theme:
   theme: (base: "outline", edge: "elbow", radius: 0pt), map)
 ```
 
-Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`), `fill` (`"tint"`,
+Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`, `"taper"`, `"comb"`), `fill` (`"tint"`,
 `"solid"`, `"white"`, `"none"`), `stroke` (border width), `radius`,
 `shape` (`"rect"`, `"circle"`, `"ellipse"`), `size` (a fixed diameter per
 depth, e.g. `(5em, 4em, 2.6em)`, for bubble trees), `underline`, `dash`
-(`"solid"`, `"dashed"`, `"dotted"`), `font`, `root` with overrides for the
-root only, and `hand`: `none` or a dictionary with
+(`"solid"`, `"dashed"`, `"dotted"`), `font`, `taper` (factors for
+`edge: "taper"`), `root` and `branches` with overrides for the root and the
+first level only, and `hand`: `none` or a dictionary with
 `amplitude` (excursion in pt), `wavelength` (in pt), `randomness`
 (irregularity, 1 is a pure sine), `segment` (step in pt) and `passes` (how
 often each line is drawn).
@@ -220,6 +228,15 @@ Cross-links, a summary brace and a cloud:
   branch([Dark reaction], [Calvin cycle], [Glucose], id: "dark", summary: [products]),
 )
 ```
+
+Building up a map in a typstage deck, one branch per step:
+
+```typ
+#build(from => brainroot(title: [Forms of energy], reveal: i => from(i + 2), map), steps: 5)
+```
+
+A map of about 200 nodes compiles in well under a second, hand-drawn in
+about two.
 
 ## Pictures and logo
 
