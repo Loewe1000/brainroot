@@ -3,7 +3,7 @@ name = "brainroot"
 version = "0.2.0"
 entrypoint = "lib.typ"
 compiler = "0.14.0"
-exclude = ["*.pdf", ".DS_Store", "example.typ", "docs", "assets", ".github", ".gitignore", "ROADMAP.md"]
+exclude = ["*.pdf", ".DS_Store", "example.typ", "docs", "assets/*.typ", "assets/build.sh", ".github", ".gitignore", "ROADMAP.md"]
 
 description = "Mind maps from nested lists: seven layouts, twelve themes, hand-drawn mode"
 license = "MIT"
