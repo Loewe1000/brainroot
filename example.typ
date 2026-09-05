@@ -142,3 +142,43 @@
 #brainroot(title: [Energiearten], width: 6cm, karte)
 #v(5mm)
 #brainroot(title: [Energiearten], zoom: 60%, karte)
+
+#pagebreak()
+
+// 0.2.0: icons, node overrides, background
+#set page(width: auto, height: auto, margin: 1cm)
+#set text(font: "Helvetica", size: 10pt)
+#brainroot(title: [Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top", background: rgb("#eef4fb"),
+  branch([Formel], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
+  branch([Link], link("https://typst.app")[typst.app]),
+  branch([Wichtig], branch([Kernbegriff], mark: true), branch([Ring], fill: none), branch([Rot], ink: red)))
+#v(5mm)
+// Lückenkarte und Lösung
+#brainroot(title: [Energiearten], blanks: "leaves", karte)
+#v(5mm)
+#brainroot(title: [Energiearten], blanks: "leaves", solution: true, solution-ink: red, karte)
+
+#pagebreak()
+// Formen, Farbverlauf, Kantenbeschriftung
+#brainroot(title: [Energie], layout: "radial", palette: "sunset",
+  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
+  thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[
+  - Bewegung
+    - Wind
+    - Fahrt
+  - Wärme
+    - Feuer
+  - Höhe
+    - Fall
+    - Gewicht
+]
+#v(5mm)
+#brainroot(title: [Mind Map], theme: (base: "outline", shape: "ellipse"), palette: "ocean", karte)
+#v(5mm)
+#brainroot(title: [Stoffe], layout: "down", theme: "blocks", shade: 30%,
+  branch([Reinstoffe], branch([Elemente], [Metalle], [Nichtmetalle]), [Verbindungen]),
+  branch([Gemische], [homogen], [heterogen]))
+#v(5mm)
+#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain", level-gap: 5em,
+  branch([Kopf], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]),
+  branch([Zahl], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]))

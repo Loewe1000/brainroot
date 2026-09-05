@@ -15,7 +15,7 @@ the surrounding document.
 = Quick start
 
 #show-code[```typ
-#import "@preview/brainroot:0.1.0": brainroot, branch
+#import "@preview/brainroot:0.2.0": brainroot, branch
 ```]
 
 The simplest input is a list: every item becomes a node, indented items its
@@ -87,16 +87,6 @@ it its own colour instead of the next one from the palette.
   width: 100%,
 )
 
-= Layouts
-
-`layout` decides how the branches sit around the root. `both` is the
-two-sided map from above, `right` and `left` put everything on one side.
-`down` and `up` set a tree from top to bottom or the other way round, like an
-org chart. `radial` is the classic Buzan mind map: the whole tree fans out
-from the root, every subtree in a sector of its own. `star` only puts the
-branches on a circle around the root, their subtrees grow horizontally
-outward.
-
 #let map = [
   - Kinetic energy
     - Motion
@@ -109,6 +99,86 @@ outward.
     - Gravity
     - Weight
 ]
+
+= Nodes
+
+A label is content: formulas, images and links work as they do anywhere. An
+`icon` sits left of the label or, with `icon-at: "top"`, above it, on the
+root too. Per node you can set `fill` (a colour, or `none` for a ring),
+`ink`, and `mark: true` for a highlighted key term.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energy], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+      branch([Formula], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
+      branch([Link], link("https://typst.app")[typst.app]),
+      branch([Important], branch([Key term], mark: true), branch([Ring], fill: none), branch([Red], ink: red)))
+  },
+  source: ```typ
+#brainroot(title: [Energy], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+  branch([Formula], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
+  branch([Link], link("https://typst.app")[typst.app]),
+  branch([Important], branch([Key term], mark: true), branch([Ring], fill: none), branch([Red], ink: red)))
+  ```,
+  width: 100%,
+)
+
+== Gaps and the solution
+
+`blank: true` on a branch draws its box empty, at full size. `blanks:
+"leaves"`, `"branches"` or `"all"` does that for a whole class of nodes. The
+same map with `solution: true` fills the gaps in, with `solution-ink` in a
+colour that makes the answers stand out. Task and solution come from one
+source.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Forms of energy], blanks: "leaves", map)
+    v(4pt)
+    brainroot(width: 100%, title: [Forms of energy], blanks: "leaves", solution: true, solution-ink: red, map)
+  },
+  source: ```typ
+#brainroot(title: [Forms of energy], blanks: "leaves", map)
+#brainroot(title: [Forms of energy], blanks: "leaves", solution: true, solution-ink: red, map)
+  ```,
+  width: 100%,
+)
+
+== Edge labels
+
+`edge-label` puts a small label on the edge that leads to a node. That turns
+the mind map into a probability tree or a decision tree.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
+      branch([Heads], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]),
+      branch([Tails], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]))
+  },
+  source: ```typ
+#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
+  branch([Heads], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]),
+  branch([Tails], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]))
+  ```,
+  width: 100%,
+)
+
+= Layouts
+
+`layout` decides how the branches sit around the root. `both` is the
+two-sided map from above, `right` and `left` put everything on one side.
+`down` and `up` set a tree from top to bottom or the other way round, like an
+org chart. `radial` is the classic Buzan mind map: the whole tree fans out
+from the root, every subtree in a sector of its own. `star` only puts the
+branches on a circle around the root, their subtrees grow horizontally
+outward.
+
 
 #show-example(
   rendered: {
@@ -222,6 +292,50 @@ palette. Ten are built in:
   )
 ]
 
+== Shapes
+
+The theme field `shape` turns the boxes into circles or ellipses; `size`
+gives a fixed diameter per depth, as in a bubble tree. Circles suit short
+labels, a long word makes a large disc. `shade` steps the branch colour per
+level.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energy], layout: "radial", palette: "sunset",
+      theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
+      thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[
+      - Motion
+        - Wind
+        - Travel
+      - Heat
+        - Fire
+      - Height
+        - Fall
+        - Weight
+    ]
+  },
+  source: ```typ
+#brainroot(title: [Energy], layout: "radial", palette: "sunset",
+  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
+  thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[ ... ]
+  ```,
+  width: 100%,
+)
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Mind Map], theme: (base: "outline", shape: "ellipse"), palette: "ocean", map)
+  },
+  source: ```typ
+#brainroot(title: [Mind Map], theme: (base: "outline", shape: "ellipse"), palette: "ocean", map)
+  ```,
+  width: 100%,
+)
+
 == Hand-drawn
 
 The themes `hand`, `scribble`, `marker` and `pencil` wobble every line after
@@ -260,8 +374,8 @@ drawn). Any theme can be made hand-drawn with it:
 A dictionary overrides individual fields; `base` picks the starting theme,
 otherwise `soft`. Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`),
 `fill` (`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke`, `radius`,
-`underline`, `dash`, `font`, `hand` and `root` with overrides for the root
-only. `layout` puts all branches on one side.
+`shape`, `size`, `underline`, `dash`, `font`, `hand` and `root` with overrides
+for the root only. `layout` puts all branches on one side.
 
 #show-example(
   rendered: {
@@ -298,6 +412,9 @@ only. `layout` puts all branches on one side.
   length or as a share of the surrounding block (`width: 100%`); `zoom` is a
   factor on top. Both change only the size, never the layout.
 - `inset` is the padding of the boxes.
+- `shade` steps the branch colour per level, `20%` lighter towards the
+  leaves, `-20%` darker. `background` paints a colour behind the map,
+  `padding` the space around it.
 
 = Functions
 

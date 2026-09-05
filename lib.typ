@@ -27,12 +27,44 @@
   /// brainroot balance. Only read on the first level.
   /// -> alignment | auto
   side: auto,
+  /// An icon, emoji or image set beside the label.
+  /// -> content | none
+  icon: none,
+  /// Where the icon goes: `"left"` of the label or `"top"`, above it.
+  /// -> str
+  icon-at: "left",
+  /// Fill of this node's box; `auto` follows the theme, `none` leaves the
+  /// box unfilled with a border in the branch colour (a ring).
+  /// -> auto | color | none
+  fill: auto,
+  /// Text colour of this node; `auto` follows the fill.
+  /// -> auto | color
+  ink: auto,
+  /// Highlights the node: bold text and a strong border in the branch
+  /// colour, for key terms.
+  /// -> bool
+  mark: false,
+  /// Draws the box empty, at its full size, unless the map is set with
+  /// `solution: true` -- a gap to fill in.
+  /// -> bool
+  blank: false,
+  /// A small label on the edge that leads to this node, for decision trees
+  /// and probability trees.
+  /// -> content | none
+  edge-label: none,
 ) = (
   brainroot-node: true,
   label: label,
   kids: kids.pos(),
   color: color,
   side: side,
+  icon: icon,
+  icon-at: icon-at,
+  fill: fill,
+  ink: ink,
+  mark: mark,
+  blank: blank,
+  edge-label: edge-label,
 )
 
 // Anything that is not a branch becomes a leaf.
@@ -166,7 +198,10 @@
 //               randomness  irregularity of the rhythm (1 = pure sine)
 //               segment     step along the path in pt
 //               passes      how often each line is drawn (2 = "scribbled")
-//   root      overrides for the root only (fill, stroke, radius)
+//   shape     "rect" | "circle" | "ellipse"   shape of the boxes
+//   size      `none`, or an array of lengths per depth: a fixed diameter
+//             (width for ellipses) instead of a size fitted to the text
+//   root      overrides for the root only (fill, stroke, radius, shape, size)
 
 /// The built-in themes: `soft`, `outline`, `blocks`, `lines`, `sketch`,
 /// `bubbles`, `hand`, `scribble`, `marker`, `pencil`. Each is a dictionary
@@ -211,7 +246,7 @@
            root: (stroke: 1pt)),
 )
 
-#let _theme-defaults = (font: none, hand: none)
+#let _theme-defaults = (font: none, hand: none, shape: "rect", size: none)
 
 #let _theme(t) = {
   if type(t) == str {
@@ -263,31 +298,70 @@
   else { opts.ink-dark }
 }
 
-#let _nodebox(node, depth, color, opts, width: auto) = {
+// Everything the theme and the node decide about a box: fill, border,
+// radius, shape, fixed size, text colour and weight. Shared by the box
+// itself and by the hand-drawn outline, so both agree.
+#let _paint(node, depth, color, opts) = {
   let th = opts.theme
   let root = depth == 0
   let spec = if root { th + th.root } else { th }
   let color = if root { opts.root-fill } else { color }
-  let scale = opts.scale.at(calc.min(depth, opts.scale.len() - 1))
-  let weight = if depth < opts.bold-depth { "bold" } else { "regular" }
-  let fill = _fill(spec.fill, color, opts)
-  let ink = _ink(fill, opts)
+  let fill = if node.fill == auto { _fill(spec.fill, color, opts) } else { node.fill }
   let stroke = if spec.underline and not root { none }
     else if spec.stroke == 0pt { none } else { spec.stroke + color }
+  // A ring: no fill asks for a visible border.
+  if node.fill == none and stroke == none { stroke = calc.max(spec.stroke, 0.08em) + color }
+  if node.mark { stroke = 0.15em + color.darken(35%) }
+  let ink = if node.ink != auto { node.ink } else { _ink(fill, opts) }
+  let weight = if depth < opts.bold-depth or node.mark { "bold" } else { "regular" }
+  let size = if spec.size == none { none } else { spec.size.at(calc.min(depth, spec.size.len() - 1)) }
+  (
+    fill: fill, stroke: stroke, ink: ink, weight: weight,
+    shape: spec.shape, size: size,
+    radius: if spec.underline and not root { 0pt } else { spec.radius },
+  )
+}
+
+// Is this node a gap to fill in? Its own `blank`, or the map-wide rule.
+#let _is-blank(node, depth, opts) = {
+  (node.blank
+    or (opts.blanks == "all" and depth > 0)
+    or (opts.blanks == "leaves" and depth > 0 and node.kids.len() == 0)
+    or (opts.blanks == "branches" and depth == 1))
+}
+
+#let _nodebox(node, depth, color, opts, width: auto) = {
+  let th = opts.theme
+  let p = _paint(node, depth, color, opts)
+  let scale = opts.scale.at(calc.min(depth, opts.scale.len() - 1))
   // Hand-drawn: the box itself stays invisible, `_hand-shape` draws its
   // outline as a wobbly path underneath. Size and padding stay the same so
   // the layout holds.
   let drawn = th.hand == none
-  let label = text(weight: weight, size: 1em * scale, fill: ink, node.label)
+  let blank = _is-blank(node, depth, opts)
+  let ink = if blank and opts.solution and opts.solution-ink != auto { opts.solution-ink } else { p.ink }
+  let label = text(weight: p.weight, size: 1em * scale, fill: ink, node.label)
   let label = if th.font != none { text(font: th.font, label) } else { label }
-  box(
-    width: width,
-    fill: if drawn { fill } else { none },
-    stroke: if drawn { stroke } else { none },
-    radius: if spec.underline and not root { 0pt } else { spec.radius },
-    inset: opts.inset,
-    label,
-  )
+  // A gap keeps its size: `hide` measures like the text it hides.
+  let label = if blank and not opts.solution { hide(label) } else { label }
+  let body = if node.icon == none { label }
+    else if node.icon-at == "top" { align(center, stack(dir: ttb, spacing: 0.3em, node.icon, label)) }
+    else { box(node.icon) + h(0.35em) + label }
+  let fill = if drawn { p.fill } else { none }
+  let stroke = if drawn { p.stroke } else { none }
+  if p.shape == "rect" {
+    box(width: width, fill: fill, stroke: stroke, radius: p.radius, inset: opts.inset, body)
+  } else if p.size != none {
+    // Fixed diameter: the text wraps inside and is centred.
+    let d = p.size
+    let inner = box(width: if p.shape == "circle" { d * 0.72 } else { d * 0.8 }, align(center, body))
+    if p.shape == "circle" { circle(radius: d / 2, fill: fill, stroke: stroke, inset: 0pt, align(center + horizon, inner)) }
+    else { ellipse(width: d, height: d * 0.62, fill: fill, stroke: stroke, inset: 0pt, align(center + horizon, inner)) }
+  } else {
+    let inner = align(center + horizon, box(width: width, align(center, body)))
+    if p.shape == "circle" { circle(fill: fill, stroke: stroke, inset: opts.inset, inner) }
+    else { ellipse(fill: fill, stroke: stroke, inset: opts.inset, inner) }
+  }
 }
 
 // CeTZ measures `content` with its own text edges (cap-height, baseline)
@@ -295,19 +369,6 @@
 // fixed size measured here takes that decision away from CeTZ: it is
 // centred exactly where the edges and the hand-drawn shape expect it.
 #let _framed(t, body) = block(width: t.w, height: t.h, body)
-
-// Fill and border of a node as `_nodebox` picks them -- for the hand-drawn
-// path.
-#let _node-paint(depth, color, opts) = {
-  let th = opts.theme
-  let root = depth == 0
-  let spec = if root { th + th.root } else { th }
-  let color = if root { opts.root-fill } else { color }
-  let fill = _fill(spec.fill, color, opts)
-  let stroke = if spec.underline and not root { none }
-    else if spec.stroke == 0pt { none } else { spec.stroke + color }
-  (fill: fill, stroke: stroke, radius: if spec.underline and not root { 0pt } else { spec.radius })
-}
 
 // --- Hand-drawn lines ------------------------------------------------------
 //
@@ -423,11 +484,18 @@
 }
 
 // The outline of a node as a wobbly path, at (cx, cy) given as lengths.
+// Ellipse around (cx, cy) as a polyline.
+#let _ellipse-pts(cx, cy, rx, ry, n: 48) = range(n).map(i => {
+  let a = 360deg * i / n
+  (cx + rx * calc.cos(a), cy + ry * calc.sin(a))
+})
+
 #let _hand-shape(cx, cy, t, depth, color, opts) = {
-  let paint = _node-paint(depth, color, opts)
+  let paint = _paint(t.node, depth, color, opts)
   let (w, h) = (_pt(t.w), _pt(t.h))
   let r = if type(paint.radius) == ratio { calc.min(w, h) * paint.radius / 100% } else { _pt(paint.radius) }
-  let pts = _rounded-rect(_pt(cx), _pt(cy), w, h, r)
+  let pts = if paint.shape == "rect" { _rounded-rect(_pt(cx), _pt(cy), w, h, r) }
+    else { _ellipse-pts(_pt(cx), _pt(cy), w / 2, h / 2) }
   let st = if paint.stroke == none { none } else { paint.stroke }
   if st == none and paint.fill == none { return }
   _hand-line(pts, st, opts.theme.hand, _seed(_pt(cx), _pt(cy), w, h), closed: true, fill: paint.fill)
@@ -462,14 +530,30 @@
 // natural width stays: a cut-off word would be worse than a wide box.
 // Must be called inside `context`.
 #let _measure-node(node, depth, color, opts) = {
+  let th = opts.theme
+  let spec = if depth == 0 { th + th.root } else { th }
   let natural = measure(_nodebox(node, depth, color, opts))
+  let words = _words(node.label)
+  let floor = if words == none { none } else {
+    words.map(w => measure(_nodebox(branch(w), depth, color, opts)).width).fold(0pt, calc.max)
+  }
+  // Circles and ellipses grow with the diagonal of the text, so a long
+  // single line makes a huge disc. Try a few narrower wraps and keep the
+  // one that gives the smallest shape.
+  if spec.shape != "rect" and spec.size == none and floor != none {
+    let best = (w: natural.width, h: natural.height, width: auto)
+    for f in (0.8, 0.65, 0.5, 0.4, 0.3) {
+      let cand = natural.width * f
+      if cand < floor { break }
+      let m = measure(_nodebox(node, depth, color, opts, width: cand))
+      if m.width < best.w { best = (w: m.width, h: m.height, width: cand) }
+    }
+    return best
+  }
   if opts.max-width == none or natural.width <= opts.max-width {
     return (w: natural.width, h: natural.height, width: auto)
   }
-  let words = _words(node.label)
-  let floor = if words == none { opts.max-width } else {
-    words.map(w => measure(_nodebox((label: w), depth, color, opts)).width).fold(0pt, calc.max)
-  }
+  let floor = if floor == none { opts.max-width } else { floor }
   if floor > opts.max-width {
     return (w: natural.width, h: natural.height, width: auto)
   }
@@ -481,7 +565,10 @@
     let m = measure(_nodebox(node, depth, color, opts, width: mid))
     if m.height <= wrapped.height { hi = mid } else { lo = mid }
   }
-  (w: hi, h: wrapped.height, width: hi)
+  // Measure the box once more at the chosen width: for a shaped node the
+  // outer size is not the inner width.
+  let m = measure(_nodebox(node, depth, color, opts, width: hi))
+  (w: m.width, h: m.height, width: hi)
 }
 
 // --- Layout ----------------------------------------------------------------
@@ -509,10 +596,15 @@
 // up as far as it collides with the previous one on no level. So a leaf
 // without children stays close to its neighbour, even if that one has a
 // deep subtree.
-#let _measure-tree(node, depth, color, opts, vertical) = {
+#let _measure-tree(node, depth, base, opts, vertical) = {
+  // `shade` steps the branch colour per level: positive lightens towards
+  // the leaves, negative darkens.
+  let color = if opts.shade == 0% or depth <= 1 { base }
+    else if opts.shade > 0% { base.lighten(opts.shade * (depth - 1)) }
+    else { base.darken(-opts.shade * (depth - 1)) }
   let m = _measure-node(node, depth, color, opts)
   let sz = _sizes(m, vertical)
-  let kids = node.kids.map(k => _measure-tree(_norm(k), depth + 1, color, opts, vertical))
+  let kids = node.kids.map(k => _measure-tree(_norm(k), depth + 1, base, opts, vertical))
 
   let placed = ()
   let merged = ()   // contour of the children placed so far, absolute on u
@@ -625,18 +717,36 @@
 // An edge from p0 to p1 in the theme's routing; the curve runs parallel to
 // the main axis at both ends.
 // (`st` instead of `stroke`: cetz.draw exports a function of that name.)
-#let _edge(p0, p1, st, opts, vertical) = {
-  import cetz.draw: bezier, line
+#let _controls(p0, p1, vertical) = {
   let (x0, y0) = p0
   let (x1, y1) = p1
-  let (c0, c1) = if vertical {
+  if vertical {
     let mid = (y0 + y1) / 2
     ((x0, mid), (x1, mid))
   } else {
     let mid = (x0 + x1) / 2
     ((mid, y0), (mid, y1))
   }
+}
+
+#let _edge(p0, p1, st, opts, vertical) = {
+  let (c0, c1) = _controls(p0, p1, vertical)
   _path(p0, c0, c1, p1, st, opts)
+}
+
+// The middle of an edge: the Bézier point at t = 1/2. For an elbow it lands
+// on the vertical segment, for a straight line at the midpoint.
+#let _mid(p0, c0, c1, p1) = (
+  0.125 * p0.at(0) + 0.375 * c0.at(0) + 0.375 * c1.at(0) + 0.125 * p1.at(0),
+  0.125 * p0.at(1) + 0.375 * c0.at(1) + 0.375 * c1.at(1) + 0.125 * p1.at(1),
+)
+
+// A small label sitting on an edge.
+#let _edge-label(at, label, opts) = {
+  import cetz.draw: content
+  if label == none { return }
+  content(at, box(fill: opts.edge-label-fill, inset: 0.2em, radius: 0.2em,
+    text(size: 0.85em, fill: opts.ink-dark, label)))
 }
 
 // Draws one node's box centred at (cx, cy), with its underline if the theme
@@ -667,8 +777,11 @@
   let m1 = m0 + dir * opts.level-gap
   for k in t.kids {
     let ku = u + k.du
-    _edge(_xy(m0, anchor(t, u), vertical), _xy(m1, anchor(k, ku), vertical),
-      _stroke(k.depth - 1, t.color, opts), opts, vertical)
+    let p0 = _xy(m0, anchor(t, u), vertical)
+    let p1 = _xy(m1, anchor(k, ku), vertical)
+    let (c0, c1) = _controls(p0, p1, vertical)
+    _path(p0, c0, c1, p1, _stroke(k.depth - 1, k.color, opts), opts)
+    _edge-label(_mid(p0, c0, c1, p1), k.node.edge-label, opts)
     _draw-tree(k, m1, ku, dir, opts, vertical)
   }
   // The box after the edges, so it covers their ends.
@@ -678,16 +791,20 @@
 
 // Edge from the root to a branch: leaves the root towards the branch and
 // arrives parallel to the main axis.
-#let _root-edge(p1, m-inner, st, opts, vertical) = {
-  import cetz.draw: bezier
+#let _root-controls(p1, m-inner, opts, vertical) = {
   if opts.theme.edge != "curve" or vertical {
     // Vertically the S-curve with its inflection at half height is calmest.
-    _edge((0pt, 0pt), p1, st, opts, vertical)
+    _controls((0pt, 0pt), p1, vertical)
   } else {
     let (x1, y1) = p1
-    let (c0, c1) = if vertical { ((0pt, y1 * 0.9), (x1, m-inner)) } else { ((x1 * 0.9, 0pt), (m-inner, y1)) }
-    _path((0pt, 0pt), c0, c1, p1, st, opts)
+    ((x1 * 0.9, 0pt), (m-inner, y1))
   }
+}
+
+#let _root-edge(p1, m-inner, st, opts, vertical, label: none) = {
+  let (c0, c1) = _root-controls(p1, m-inner, opts, vertical)
+  _path((0pt, 0pt), c0, c1, p1, st, opts)
+  _edge-label(_mid((0pt, 0pt), c0, c1, p1), label, opts)
 }
 
 // Stacks branches on u, centred around 0, and draws them with their root edge.
@@ -697,7 +814,8 @@
   for t in side {
     let tu = cu - t.lo
     let au = if opts.theme.underline and not vertical { tu + t.size-u / 2 } else { tu }
-    _root-edge(_xy(m1, au, vertical), dir * m-inner, _stroke(0, t.color, opts), opts, vertical)
+    _root-edge(_xy(m1, au, vertical), dir * m-inner, _stroke(0, t.color, opts), opts, vertical,
+      label: t.node.edge-label)
     _draw-tree(t, m1, tu, dir, opts, vertical)
     cu += t.size + opts.branch-gap
   }
@@ -757,9 +875,10 @@
       let cx = px + d * t.w / 2
       let ty = if py < 0pt { py + t.h / 2 } else { py - t.h / 2 }
       _path((0pt, 0pt), (0pt, ty / 2), (cx, ty / 2), (cx, ty), st, opts)
+      _edge-label(_mid((0pt, 0pt), (0pt, ty / 2), (cx, ty / 2), (cx, ty)), t.node.edge-label, opts)
     } else {
       let ay = if opts.theme.underline { py - t.size-u / 2 } else { py }
-      _root-edge((px, ay), px - d * opts.root-gap / 2, st, opts, false)
+      _root-edge((px, ay), px - d * opts.root-gap / 2, st, opts, false, label: t.node.edge-label)
     }
     _draw-tree(t, px, -py, d, opts, false)
   }
@@ -864,17 +983,16 @@
   let draw(t, parent, pa) = {
     let p = pos(t, f)
     let st = _stroke(t.depth - 1, t.color, opts)
-    if opts.theme.edge == "curve" {
+    let (c0, c1) = if opts.theme.edge == "curve" {
       // Leaves the parent along its own ray and arrives along the child's:
       // a gentle bend that keeps the fan readable.
       let (dx, dy) = (p.at(0) - parent.at(0), p.at(1) - parent.at(1))
       let d = calc.sqrt((dx / 1pt) * (dx / 1pt) + (dy / 1pt) * (dy / 1pt)) * 1pt * 0.4
-      let c0 = (parent.at(0) + d * calc.cos(pa), parent.at(1) + d * calc.sin(pa))
-      let c1 = (p.at(0) - d * calc.cos(t.angle), p.at(1) - d * calc.sin(t.angle))
-      _path(parent, c0, c1, p, st, opts)
-    } else {
-      _path(parent, parent, p, p, st, opts)
-    }
+      ((parent.at(0) + d * calc.cos(pa), parent.at(1) + d * calc.sin(pa)),
+       (p.at(0) - d * calc.cos(t.angle), p.at(1) - d * calc.sin(t.angle)))
+    } else { (parent, p) }
+    _path(parent, c0, c1, p, st, opts)
+    _edge-label(_mid(parent, c0, c1, p), t.node.edge-label, opts)
     for k in t.kids { draw(k, p, t.angle) }
   }
   for t in placed { draw(t, (0pt, 0pt), t.angle) }
@@ -988,6 +1106,37 @@
   /// halves it.
   /// -> ratio | float
   zoom: 100%,
+  /// An icon, emoji or image beside the root's label.
+  /// -> content | none
+  icon: none,
+  /// Where the root's icon goes: `"left"` or `"top"`.
+  /// -> str
+  icon-at: "left",
+  /// A colour behind the whole map; `none` leaves the page as it is.
+  /// -> color | none
+  background: none,
+  /// Space between the map and the edge of its background.
+  /// -> length
+  padding: 1em,
+  /// Steps the branch colour per level below the first: `20%` lightens each
+  /// level by a fifth towards the leaves, `-20%` darkens. `0%` keeps one
+  /// colour per branch.
+  /// -> ratio
+  shade: 0%,
+  /// Draws whole classes of nodes as gaps: `"leaves"`, `"branches"` (the
+  /// first level) or `"all"`; `none` only honours each node's own `blank`.
+  /// -> none | str
+  blanks: none,
+  /// `true` fills the gaps in: the solution of a map with blanks.
+  /// -> bool
+  solution: false,
+  /// Text colour for filled-in gaps, so the solution stands out; `auto`
+  /// uses the normal text colour.
+  /// -> auto | color
+  solution-ink: auto,
+  /// Background of the small labels on edges.
+  /// -> color | none
+  edge-label-fill: white,
 ) = context {
   // Lengths in em follow the surrounding font size, so a map in a footnote
   // and a map on a poster keep their proportions. Resolve them once here.
@@ -1014,6 +1163,8 @@
     scale: scale, bold-depth: bold-depth, thickness: thickness,
     level-gap: level-gap, root-gap: root-gap, sibling-gap: sibling-gap, branch-gap: branch-gap,
     max-width: max-width, inset: inset,
+    shade: shade, blanks: blanks, solution: solution, solution-ink: solution-ink,
+    edge-label-fill: edge-label-fill,
   )
   let args = branches.pos()
   let root = title
@@ -1022,7 +1173,7 @@
     root = args.first()
     args = args.slice(1)
   }
-  let root-node = branch(root)
+  let root-node = branch(root, icon: icon, icon-at: icon-at)
   let rm = _measure-node(root-node, 0, black, opts)
 
   let trees = args.map(_expand).flatten().enumerate().map(((i, b)) => {
@@ -1047,10 +1198,13 @@
       }
     }
     // The root last, so it lies on top of the lines.
-    if opts.theme.hand != none { _hand-shape(0pt, 0pt, rm, 0, black, opts) }
+    if opts.theme.hand != none { _hand-shape(0pt, 0pt, rm + (node: root-node), 0, black, opts) }
     content((0, 0), _framed(rm, _nodebox(root-node, 0, black, opts, width: rm.width)))
   })
 
+  let canvas = if background == none { canvas } else {
+    block(fill: background, inset: abs(padding), radius: 0.6em, canvas)
+  }
   if width == auto and zoom == 100% { return canvas }
   // Scale the finished drawing as a whole, text included, so `width` and
   // `zoom` never change the layout, only its size on the page.

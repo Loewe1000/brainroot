@@ -1,6 +1,6 @@
 [package]
 name = "brainroot"
-version = "0.1.0"
+version = "0.2.0"
 entrypoint = "lib.typ"
 compiler = "0.13"
 exclude = ["*.pdf", "example.typ", "docs", "assets", ".github", ".gitignore", "ROADMAP.md"]

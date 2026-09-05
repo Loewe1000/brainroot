@@ -12,7 +12,7 @@ ten palettes, and a hand-drawn mode in pure Typst.
 ## Usage
 
 ```typ
-#import "@preview/brainroot:0.1.0": brainroot, branch
+#import "@preview/brainroot:0.2.0": brainroot, branch
 
 #brainroot(title: [Forms of energy])[
   - Kinetic energy
@@ -47,6 +47,13 @@ as arguments.
 
 - `color`: colour of the branch; `none` takes the next colour of the palette.
 - `side`: `left` or `right` forces the side. Both only on the first level.
+- `icon`, `icon-at`: an icon, emoji or image `"left"` of the label or on `"top"`.
+- `fill`, `ink`: this node's fill (`none` gives a ring) and text colour.
+- `mark: true`: bold text and a strong border, for key terms.
+- `blank: true`: an empty box at full size, filled in with `solution: true`.
+- `edge-label`: a small label on the edge into this node.
+
+Labels are content: formulas (`[$E = m c^2$]`), images and `link()` work.
 
 `brainroot(..branches, title: none, ...)`
 
@@ -68,6 +75,11 @@ as arguments.
 - `max-width`: labels wider than this wrap. Default: `14em`.
 - `inset`: padding of the boxes. Default: `(x: 0.9em, y: 0.55em)`.
 
+- `icon`, `icon-at`: icon beside or above the root's label.
+- `background`, `padding`: a colour behind the map and the space around it.
+- `shade`: steps the branch colour per level, `20%` lighter towards the leaves, `-20%` darker. Default: `0%`.
+- `blanks`: draws `"leaves"`, `"branches"` or `"all"` nodes as gaps; `solution: true` fills them in, `solution-ink` colours the answers.
+- `edge-label-fill`: background of edge labels. Default: `white`.
 - `width`: `auto` for the natural size, or a length or ratio of the surrounding block to scale the whole map to, text included.
 - `zoom`: a factor on the whole map, on top of `width`. Default: `100%`.
 
@@ -153,8 +165,10 @@ A dictionary overrides individual fields of a theme:
 
 Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`), `fill` (`"tint"`,
 `"solid"`, `"white"`, `"none"`), `stroke` (border width), `radius`,
-`underline`, `dash` (`"solid"`, `"dashed"`, `"dotted"`), `font`, `root` with
-overrides for the root only, and `hand`: `none` or a dictionary with
+`shape` (`"rect"`, `"circle"`, `"ellipse"`), `size` (a fixed diameter per
+depth, e.g. `(5em, 4em, 2.6em)`, for bubble trees), `underline`, `dash`
+(`"solid"`, `"dashed"`, `"dotted"`), `font`, `root` with overrides for the
+root only, and `hand`: `none` or a dictionary with
 `amplitude` (excursion in pt), `wavelength` (in pt), `randomness`
 (irregularity, 1 is a pure sine), `segment` (step in pt) and `passes` (how
 often each line is drawn).
@@ -176,6 +190,23 @@ typst compile docs/docs.typ docs/build --format bundle --features bundle,html --
 ```
 
 and need `@schule/schuldocs` from [Typst-Schule](https://github.com/Loewe1000/Typst-Schule).
+
+## Worksheets
+
+A map with gaps and its solution from the same source:
+
+```typ
+#brainroot(title: [Forms of energy], blanks: "leaves", map)
+#brainroot(title: [Forms of energy], blanks: "leaves", solution: true, solution-ink: red, map)
+```
+
+A probability tree with edge labels:
+
+```typ
+#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
+  branch([Heads], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]),
+  branch([Tails], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]))
+```
 
 ## Pictures and logo
 

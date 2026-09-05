@@ -16,7 +16,7 @@ sie sich der Schrift des umgebenden Dokuments an.
 = Schnellstart
 
 #show-code[```typ
-#import "@preview/brainroot:0.1.0": brainroot, branch
+#import "@preview/brainroot:0.2.0": brainroot, branch
 ```]
 
 Die einfachste Eingabe ist eine Liste: jeder Punkt wird zu einem Knoten,
@@ -88,16 +88,6 @@ die übrigen nach links. `side: left` oder `side: right` legt einen Ast fest,
   width: 100%,
 )
 
-= Anordnungen
-
-`layout` bestimmt, wie die Äste um die Wurzel liegen. `both` ist die
-zweiseitige Karte von oben, `right` und `left` legen alles auf eine Seite.
-`down` und `up` setzen einen Baum von oben nach unten oder umgekehrt, wie ein
-Organigramm. `radial` ist die klassische Mindmap nach Buzan: der ganze Baum
-fächert von der Wurzel aus, jeder Teilbaum bekommt seinen eigenen Sektor.
-`star` legt nur die Äste im Kreis um die Wurzel, die Teilbäume wachsen
-waagerecht nach außen.
-
 #let karte = [
   - Bewegungsenergie
     - Kinetische Energie
@@ -110,6 +100,88 @@ waagerecht nach außen.
     - Schwerkraftenergie
     - Gewichtenergie
 ]
+
+= Knoten
+
+Eine Beschriftung ist Content: Formeln, Bilder und Links gehen wie überall.
+Ein `icon` steht links neben der Beschriftung oder mit `icon-at: "top"`
+darüber, auch an der Wurzel. Je Knoten lassen sich `fill` (eine Farbe oder
+`none` für einen Ring), `ink` und `mark: true` für einen hervorgehobenen
+Fachbegriff setzen.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+      branch([Formel], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
+      branch([Link], link("https://typst.app")[typst.app]),
+      branch([Wichtig], branch([Kernbegriff], mark: true), branch([Ring], fill: none), branch([Rot], ink: red)))
+  },
+  source: ```typ
+#brainroot(title: [Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+  branch([Formel], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
+  branch([Link], link("https://typst.app")[typst.app]),
+  branch([Wichtig], branch([Kernbegriff], mark: true), branch([Ring], fill: none), branch([Rot], ink: red)))
+  ```,
+  width: 100%,
+)
+
+== Lückenkarte und Lösung
+
+`blank: true` an einem Ast zeichnet seinen Kasten leer, in voller Größe.
+`blanks: "leaves"`, `"branches"` oder `"all"` tut das für eine ganze Klasse
+von Knoten. Dieselbe Karte mit `solution: true` füllt die Lücken, mit
+`solution-ink` in einer Farbe, die die Antworten hervorhebt. Aufgabe und
+Lösung entstehen so aus derselben Quelle.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energiearten], blanks: "leaves", karte)
+    v(4pt)
+    brainroot(width: 100%, title: [Energiearten], blanks: "leaves", solution: true, solution-ink: red, karte)
+  },
+  source: ```typ
+#brainroot(title: [Energiearten], blanks: "leaves", karte)
+#brainroot(title: [Energiearten], blanks: "leaves", solution: true, solution-ink: red, karte)
+  ```,
+  width: 100%,
+)
+
+== Kantenbeschriftung
+
+`edge-label` setzt ein kleines Schild auf die Kante, die zu einem Knoten
+führt. Damit werden aus der Mindmap Baumdiagramme der Stochastik oder
+Entscheidungsbäume.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
+      branch([Kopf], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]),
+      branch([Zahl], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]))
+  },
+  source: ```typ
+#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
+  branch([Kopf], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]),
+  branch([Zahl], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]))
+  ```,
+  width: 100%,
+)
+
+= Anordnungen
+
+`layout` bestimmt, wie die Äste um die Wurzel liegen. `both` ist die
+zweiseitige Karte von oben, `right` und `left` legen alles auf eine Seite.
+`down` und `up` setzen einen Baum von oben nach unten oder umgekehrt, wie ein
+Organigramm. `radial` ist die klassische Mindmap nach Buzan: der ganze Baum
+fächert von der Wurzel aus, jeder Teilbaum bekommt seinen eigenen Sektor.
+`star` legt nur die Äste im Kreis um die Wurzel, die Teilbäume wachsen
+waagerecht nach außen.
+
 
 #show-example(
   rendered: {
@@ -223,6 +295,50 @@ weiterhin aus der Palette. Zehn sind eingebaut:
   )
 ]
 
+== Formen
+
+Das Theme-Feld `shape` macht aus den Kästen Kreise oder Ellipsen; `size`
+gibt je Tiefe einen festen Durchmesser vor, wie bei einem Bubble Tree.
+Kreise passen zu kurzen Beschriftungen, ein langes Wort macht den Kreis
+groß. `shade` stuft die Astfarbe je Ebene ab.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Energie], layout: "radial", palette: "sunset",
+      theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
+      thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[
+      - Bewegung
+        - Wind
+        - Fahrt
+      - Wärme
+        - Feuer
+      - Höhe
+        - Fall
+        - Gewicht
+    ]
+  },
+  source: ```typ
+#brainroot(title: [Energie], layout: "radial", palette: "sunset",
+  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
+  thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[ ... ]
+  ```,
+  width: 100%,
+)
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Mind Map], theme: (base: "outline", shape: "ellipse"), palette: "ocean", karte)
+  },
+  source: ```typ
+#brainroot(title: [Mind Map], theme: (base: "outline", shape: "ellipse"), palette: "ocean", karte)
+  ```,
+  width: 100%,
+)
+
 == Handgezeichnet
 
 Die Themes `hand`, `scribble`, `marker` und `pencil` wackeln jede Linie nach
@@ -261,8 +377,8 @@ Linie gezogen wird). Jedes Theme lässt sich damit handgezeichnet machen:
 Ein Dictionary überschreibt einzelne Felder; `base` wählt das Ausgangstheme,
 sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`),
 `fill` (`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke`, `radius`,
-`underline`, `dash`, `font`, `hand` und `root` mit Überschreibungen nur für
-die Wurzel. `layout` legt alle Äste auf eine Seite.
+`shape`, `size`, `underline`, `dash`, `font`, `hand` und `root` mit
+Überschreibungen nur für die Wurzel. `layout` legt alle Äste auf eine Seite.
 
 #show-example(
   rendered: {
@@ -299,6 +415,9 @@ die Wurzel. `layout` legt alle Äste auf eine Seite.
   oder als Anteil des umgebenden Blocks (`width: 100%`); `zoom` ist ein
   Faktor obendrauf. Beide ändern nur die Größe, nie das Layout.
 - `inset` ist der Innenabstand der Kästen.
+- `shade` stuft die Astfarbe je Ebene ab, `20%` heller zu den Blättern hin,
+  `-20%` dunkler. `background` legt eine Farbe hinter die Karte, `padding`
+  den Abstand dazu.
 
 = Funktionen
 

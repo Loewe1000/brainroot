@@ -92,6 +92,8 @@ sollte sich dort einklinken statt etwas Eigenes zu erfinden:
 
 ## ToDos, nach Nutzen je Aufwand
 
+Stand: 1 bis 8 sind in 0.2.0 umgesetzt.
+
 Aufwand: S bis zu einem Nachmittag, M ein bis zwei Tage, L mehr.
 
 1. **Icon und Bild im Knoten** (`icon:` an `branch`, im Titel Content). S.
