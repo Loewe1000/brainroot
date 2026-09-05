@@ -21,6 +21,13 @@
   the edge into the node, for decision and probability trees;
   `edge-label-fill` sets its background.
 - **Background.** `background:` and `padding:` paint a colour behind the map.
+- **Cross-links.** `branch(..., id: "a")` names a node, `brainroot(links:
+  (connect("a", "b", label: [...]),))` draws a curve between two nodes over
+  the map, with arrow, dash and bend.
+- **Summary braces and clouds.** `branch(..., summary: [...])` puts a brace
+  with a label beyond a node's children; `cloud: true` or a colour draws a
+  soft cloud behind the subtree. Both in the tree layouts, not in `radial`
+  and `star`.
 
 
 ## [0.1.0] — 2026-09-05

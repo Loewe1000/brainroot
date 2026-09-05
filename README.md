@@ -52,6 +52,7 @@ as arguments.
 - `mark: true`: bold text and a strong border, for key terms.
 - `blank: true`: an empty box at full size, filled in with `solution: true`.
 - `edge-label`: a small label on the edge into this node.
+- `id`: a name for cross-links; `summary`: a labelled brace beyond the children; `cloud`: `true` or a colour behind the subtree.
 
 Labels are content: formulas (`[$E = m c^2$]`), images and `link()` work.
 
@@ -80,6 +81,8 @@ Labels are content: formulas (`[$E = m c^2$]`), images and `link()` work.
 - `shade`: steps the branch colour per level, `20%` lighter towards the leaves, `-20%` darker. Default: `0%`.
 - `blanks`: draws `"leaves"`, `"branches"` or `"all"` nodes as gaps; `solution: true` fills them in, `solution-ink` colours the answers.
 - `edge-label-fill`: background of edge labels. Default: `white`.
+- `links`: cross-links, each `connect(from, to, label: none, arrow: true, dash: "dashed", bend: 30%, color: auto)`, addressing nodes by `id` (`"root"` is the root).
+- `brace-size`, `summary-gap`, `cloud-pad`: sizes of braces and clouds.
 - `width`: `auto` for the natural size, or a length or ratio of the surrounding block to scale the whole map to, text included.
 - `zoom`: a factor on the whole map, on top of `width`. Default: `100%`.
 
@@ -206,6 +209,16 @@ A probability tree with edge labels:
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
   branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
   branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
+```
+
+Cross-links, a summary brace and a cloud:
+
+```typ
+#brainroot(title: [Photosynthesis],
+  links: (connect("light", "dark", label: [ATP, NADPH]),),
+  branch([Light reaction], [Photolysis], [ATP], [NADPH], id: "light", cloud: true),
+  branch([Dark reaction], [Calvin cycle], [Glucose], id: "dark", summary: [products]),
+)
 ```
 
 ## Pictures and logo

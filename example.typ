@@ -182,3 +182,16 @@
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain", level-gap: 5em,
   branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
   branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
+
+#pagebreak()
+// Querverbindungen, Klammern, Wolken
+#brainroot(title: [Fotosynthese],
+  links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted", arrow: "both")),
+  branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten]), [ATP], [NADPH], id: "licht", cloud: true),
+  branch([Dunkelreaktion], [Calvin-Zyklus], branch([Glucose], id: "glucose"), id: "dunkel", summary: [Produkte]),
+  branch([Voraussetzungen], [Licht], [Wasser], branch([CO₂], id: "co2"), summary: [von außen], cloud: rgb("#fff4d6")))
+#v(5mm)
+#brainroot(title: [Fotosynthese], layout: "down", theme: "hand",
+  links: (connect("licht", "dunkel", label: [ATP]),),
+  branch([Lichtreaktion], [Fotolyse], [ATP], id: "licht", cloud: true),
+  branch([Dunkelreaktion], [Calvin-Zyklus], [Glucose], id: "dunkel", summary: [Produkte]))

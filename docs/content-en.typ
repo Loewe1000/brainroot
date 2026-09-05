@@ -169,6 +169,35 @@ the mind map into a probability tree or a decision tree.
   width: 100%,
 )
 
+== Cross-links, braces, clouds
+
+A mind map is a tree; the ideas in it rarely are. `id` names a node,
+`connect(from, to)` in `links` draws a curve between two nodes over the map,
+with `label`, `arrow`, `dash` and `bend`. The root is called `"root"`.
+`summary` puts a labelled brace beyond a node's children, `cloud` lays a
+cloud behind its subtree. Braces and clouds exist in the tree layouts, not
+in `radial` and `star`.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Photosynthesis],
+      links: (connect("light", "dark", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+      branch([Light reaction], [Photolysis], [ATP], [NADPH], id: "light", cloud: true),
+      branch([Dark reaction], [Calvin cycle], branch([Glucose], id: "glucose"), id: "dark", summary: [products]),
+      branch([Requirements], [Light], [Water], branch([CO₂], id: "co2"), summary: [from outside]))
+  },
+  source: ```typ
+#brainroot(title: [Photosynthesis],
+  links: (connect("light", "dark", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+  branch([Light reaction], [Photolysis], [ATP], [NADPH], id: "light", cloud: true),
+  branch([Dark reaction], [Calvin cycle], branch([Glucose], id: "glucose"), id: "dark", summary: [products]),
+  branch([Requirements], [Light], [Water], branch([CO₂], id: "co2"), summary: [from outside]))
+  ```,
+  width: 100%,
+)
+
 = Layouts
 
 `layout` decides how the branches sit around the root. `both` is the

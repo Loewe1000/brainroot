@@ -52,6 +52,18 @@
   /// and probability trees.
   /// -> content | none
   edge-label: none,
+  /// A name for `connect(...)` to address this node by. The root is `"root"`.
+  /// -> str | none
+  id: none,
+  /// A brace beyond this node's children with a label, summarising them.
+  /// Not drawn in the `radial` and `star` layouts.
+  /// -> content | none
+  summary: none,
+  /// A soft cloud behind this node's whole subtree: `true` for a light
+  /// tint of the branch colour, or a colour. Not drawn in the `radial` and
+  /// `star` layouts.
+  /// -> bool | color | none
+  cloud: none,
 ) = (
   brainroot-node: true,
   label: label,
@@ -65,6 +77,46 @@
   mark: mark,
   blank: blank,
   edge-label: edge-label,
+  id: id,
+  summary: summary,
+  cloud: cloud,
+)
+
+/// A connection between two nodes that are not parent and child, drawn over
+/// the map as a curve: a cross-link. Give the nodes an `id` and pass the
+/// connections to `brainroot(links: (...))`.
+///
+/// -> dictionary
+#let connect(
+  /// `id` of the node the curve starts at; `"root"` is the root.
+  /// -> str
+  from,
+  /// `id` of the node the curve ends at.
+  /// -> str
+  to,
+  /// A label at the middle of the curve.
+  /// -> content | none
+  label: none,
+  /// An arrowhead at the end; `"both"` puts one at each end.
+  /// -> bool | str
+  arrow: true,
+  /// Dash pattern of the curve.
+  /// -> str
+  dash: "dashed",
+  /// How far the curve bows out, as a share of the distance; `0%` is a
+  /// straight line, negative bends the other way.
+  /// -> ratio
+  bend: 30%,
+  /// Colour of the curve; `auto` is a dark grey.
+  /// -> color | auto
+  color: auto,
+  /// Line width.
+  /// -> length
+  thickness: 0.09em,
+) = (
+  brainroot-link: true,
+  from: from, to: to, label: label, arrow: arrow, dash: dash,
+  bend: bend, color: color, thickness: thickness,
 )
 
 // Anything that is not a branch becomes a leaf.
@@ -657,13 +709,26 @@
   merged = merged.map(c => (lo: c.lo - shift, hi: c.hi - shift))
 
   let contour = ((lo: -sz.u / 2, hi: sz.u / 2),) + merged
+  let extent = sz.m + if kids.len() > 0 { opts.level-gap + kids.map(k => k.extent).fold(0pt, calc.max) } else { 0pt }
+  // A summary brace sits beyond the children and needs its own room along
+  // m: gap, brace, gap, label.
+  let summary = none
+  if node.summary != none and kids.len() > 0 {
+    let lm = measure(text(size: 0.9em, node.summary))
+    summary = (w: lm.width, h: lm.height)
+    extent += opts.summary-gap * 2 + opts.brace-size + if vertical { lm.height } else { lm.width }
+  }
+  // A cloud pads the subtree on every side.
+  let pad = if node.cloud != none { opts.cloud-pad } else { 0pt }
+  let contour = contour.map(c => (lo: c.lo - pad, hi: c.hi + pad))
+  let extent = extent + pad
   let lo = contour.map(c => c.lo).fold(0pt, calc.min)
   let hi = contour.map(c => c.hi).fold(0pt, calc.max)
-  let extent = sz.m + if kids.len() > 0 { opts.level-gap + kids.map(k => k.extent).fold(0pt, calc.max) } else { 0pt }
   (
     node: node, depth: depth, color: color, kids: placed,
     w: m.w, h: m.h, width: m.width, size-m: sz.m, size-u: sz.u,
     contour: contour, lo: lo, hi: hi, size: hi - lo, extent: extent,
+    summary: summary, pad: pad,
   )
 }
 
@@ -775,7 +840,9 @@
 #let _draw-node(t, cx, cy, opts) = {
   import cetz.draw: *
   if opts.theme.hand != none { _hand-shape(cx, cy, t, t.depth, t.color, opts) }
-  content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width)))
+  let id = if t.depth == 0 { "root" } else { t.node.id }
+  content((cx, cy), _framed(t, _nodebox(t.node, t.depth, t.color, opts, width: t.width)),
+    name: if id == none { none } else { "n-" + id })
   if opts.theme.underline and t.depth > 0 {
     // The underline is a line of its own in the width of the edge flowing
     // into it; as a box border it would have a different width and sit
@@ -790,12 +857,50 @@
 // Draws a subtree whose box has its inner edge at m and is centred at u.
 // With `underline` in a horizontal layout the edges sit on the baseline of
 // the text, otherwise at the centre of the box.
+// A soft rounded shape behind a subtree.
+#let _cloud(t, m, u, dir, opts, vertical) = {
+  import cetz.draw: *
+  let fill = if t.node.cloud == true { t.color.lighten(85%) } else { t.node.cloud }
+  let st = (paint: t.color, thickness: 0.06em, dash: "dashed")
+  let a = _xy(m - dir * t.pad, u + t.lo, vertical)
+  let b = _xy(m + dir * t.extent, u + t.hi, vertical)
+  if opts.theme.hand == none {
+    rect(a, b, fill: fill, stroke: st, radius: 0.8em)
+  } else {
+    let (cx, cy) = ((a.at(0) + b.at(0)) / 2, (a.at(1) + b.at(1)) / 2)
+    let (w, h) = (calc.abs(_pt(b.at(0)) - _pt(a.at(0))), calc.abs(_pt(b.at(1)) - _pt(a.at(1))))
+    _hand-line(_rounded-rect(_pt(cx), _pt(cy), w, h, _pt(0.8em.to-absolute())), st, opts.theme.hand,
+      _seed(_pt(cx), _pt(cy), w, h), closed: true, fill: fill)
+  }
+}
+
+// A brace beyond the children of a node, spanning them, with its label.
+#let _summary(t, m1, u, dir, opts, vertical) = {
+  import cetz.draw: *
+  let inner = t.kids.map(k => k.extent).fold(0pt, calc.max)
+  let mb = m1 + dir * (inner + opts.summary-gap)
+  let lo = t.kids.map(k => k.du + k.lo).fold(0pt, calc.min)
+  let hi = t.kids.map(k => k.du + k.hi).fold(0pt, calc.max)
+  // The brace's tip points to the left of its direction: run it so the tip
+  // faces away from the tree.
+  let (p, q) = if dir > 0 { (_xy(mb, u + lo, vertical), _xy(mb, u + hi, vertical)) }
+    else { (_xy(mb, u + hi, vertical), _xy(mb, u + lo, vertical)) }
+  cetz.decorations.brace(p, q, amplitude: _pt(opts.brace-size.to-absolute()),
+    stroke: (paint: t.color, thickness: 0.07em))
+  let ml = mb + dir * (opts.brace-size + opts.summary-gap)
+  let anchor = if vertical { if dir > 0 { "south" } else { "north" } } else { if dir > 0 { "west" } else { "east" } }
+  content(_xy(ml, u + (lo + hi) / 2, vertical), anchor: anchor,
+    text(size: 0.9em, fill: t.color.darken(20%), t.node.summary))
+}
+
 #let _draw-tree(t, m, u, dir, opts, vertical) = {
   import cetz.draw: *
   let ul = opts.theme.underline and not vertical
   let anchor(tree, cu) = if ul { cu + tree.size-u / 2 } else { cu }
   let m0 = m + dir * t.size-m
   let m1 = m0 + dir * opts.level-gap
+  if t.node.cloud != none { _cloud(t, m, u, dir, opts, vertical) }
+  if t.summary != none { _summary(t, m1, u, dir, opts, vertical) }
   for k in t.kids {
     let ku = u + k.du
     let p0 = _xy(m0, anchor(t, u), vertical)
@@ -1025,6 +1130,55 @@
   for t in placed { boxes(t) }
 }
 
+// The box sizes of every node with an id, for the cross-links.
+#let _sizes-by-id(t, acc) = {
+  if t.node.id != none { acc.insert(t.node.id, (w: t.w, h: t.h)) }
+  for k in t.kids { acc = _sizes-by-id(k, acc) }
+  acc
+}
+
+// Where a line from the centre of a box towards `to` leaves the box.
+#let _border(c, to, size) = {
+  let (dx, dy) = (to.at(0) - c.at(0), to.at(1) - c.at(1))
+  let (hw, hh) = (_pt(size.w) / 2, _pt(size.h) / 2)
+  let t = calc.min(if calc.abs(dx) < 1e-6 { 1e9 } else { hw / calc.abs(dx) },
+                   if calc.abs(dy) < 1e-6 { 1e9 } else { hh / calc.abs(dy) })
+  (c.at(0) + dx * t, c.at(1) + dy * t)
+}
+
+// Cross-links, drawn last, over everything: the nodes are addressed by the
+// CeTZ names `_draw-node` gave them.
+#let _draw-links(links, sizes, opts) = {
+  import cetz.draw: *
+  for l in links {
+    assert(l.from in sizes and l.to in sizes,
+      message: "brainroot: connect(" + repr(l.from) + ", " + repr(l.to) + "): no node with that id")
+    get-ctx(ctx => {
+      let (_, a, b) = cetz.coordinate.resolve(ctx, "n-" + l.from + ".center", "n-" + l.to + ".center")
+      let p0 = _border(a, b, sizes.at(l.from))
+      let p1 = _border(b, a, sizes.at(l.to))
+      let (dx, dy) = (p1.at(0) - p0.at(0), p1.at(1) - p0.at(1))
+      let c = ((p0.at(0) + p1.at(0)) / 2 - dy * l.bend / 100%, (p0.at(1) + p1.at(1)) / 2 + dx * l.bend / 100%)
+      let color = if l.color == auto { rgb("#555555") } else { l.color }
+      let st = (paint: color, thickness: l.thickness, dash: l.dash, cap: "round")
+      let mark = if l.arrow == "both" { (start: "stealth", end: "stealth", fill: color) }
+        else if l.arrow == true { (end: "stealth", fill: color) } else { none }
+      if opts.theme.hand == none {
+        bezier(p0, p1, c, stroke: st, mark: mark)
+      } else {
+        let pts = _flatten-bezier(p0, c, c, p1)
+        let q = _wobble(pts, opts.theme.hand, _seed(..p0, ..p1))
+        line(..q, stroke: st, mark: mark)
+      }
+      if l.label != none {
+        let mid = (0.25 * p0.at(0) + 0.5 * c.at(0) + 0.25 * p1.at(0), 0.25 * p0.at(1) + 0.5 * c.at(1) + 0.25 * p1.at(1))
+        content(mid, box(fill: opts.edge-label-fill, inset: 0.25em, radius: 0.2em,
+          text(size: 0.85em, fill: color, top-edge: "bounds", bottom-edge: "bounds", l.label)))
+      }
+    })
+  }
+}
+
 /// Draws the mind map. The first-level branches come as positional
 /// arguments: `branch(...)` calls, plain content, or a Typst list whose items
 /// become branches and whose nested lists become children.
@@ -1158,6 +1312,18 @@
   /// Background of the small labels on edges.
   /// -> color | none
   edge-label-fill: white,
+  /// Cross-links between nodes, each a `connect(...)`.
+  /// -> array
+  links: (),
+  /// Height of a summary brace.
+  /// -> length
+  brace-size: 0.6em,
+  /// Space on either side of a summary brace.
+  /// -> length
+  summary-gap: 0.5em,
+  /// Space between a cloud and the boxes inside it.
+  /// -> length
+  cloud-pad: 0.6em,
 ) = context {
   // Lengths in em follow the surrounding font size, so a map in a footnote
   // and a map on a poster keep their proportions. Resolve them once here.
@@ -1186,6 +1352,7 @@
     max-width: max-width, inset: inset,
     shade: shade, blanks: blanks, solution: solution, solution-ink: solution-ink,
     edge-label-fill: edge-label-fill,
+    brace-size: abs(brace-size), summary-gap: abs(summary-gap), cloud-pad: abs(cloud-pad),
   )
   let args = branches.pos()
   let root = title
@@ -1219,8 +1386,13 @@
       }
     }
     // The root last, so it lies on top of the lines.
-    if opts.theme.hand != none { _hand-shape(0pt, 0pt, rm + (node: root-node), 0, black, opts) }
-    content((0, 0), _framed(rm, _nodebox(root-node, 0, black, opts, width: rm.width)))
+    _draw-node(rm + (node: root-node, depth: 0, color: black, width: rm.width), 0pt, 0pt, opts)
+    // Cross-links over everything.
+    if links.len() > 0 {
+      let sizes = (root: (w: rm.w, h: rm.h))
+      for t in trees { sizes = _sizes-by-id(t, sizes) }
+      _draw-links(links.filter(l => type(l) == dictionary and l.at("brainroot-link", default: false)), sizes, opts)
+    }
   })
 
   let canvas = if background == none { canvas } else {

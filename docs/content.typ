@@ -172,6 +172,36 @@ Entscheidungsbäume.
   width: 100%,
 )
 
+== Querverbindungen, Klammern, Wolken
+
+Eine Mindmap ist ein Baum, die Gedanken darin sind es selten. `id` gibt einem
+Knoten einen Namen, `connect(von, nach)` in `links` zieht eine Kurve zwischen
+zwei Knoten über die Karte, mit `label`, `arrow`, `dash` und `bend`. Die
+Wurzel heißt `"root"`. `summary` setzt eine Klammer mit Beschriftung hinter
+die Kinder eines Knotens, `cloud` legt eine Wolke hinter seinen Teilbaum.
+Klammern und Wolken gibt es in den Baum-Anordnungen, nicht bei `radial` und
+`star`.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Fotosynthese],
+      links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+      branch([Lichtreaktion], [Fotolyse], [ATP], [NADPH], id: "licht", cloud: true),
+      branch([Dunkelreaktion], [Calvin-Zyklus], branch([Glucose], id: "glucose"), id: "dunkel", summary: [Produkte]),
+      branch([Voraussetzungen], [Licht], [Wasser], branch([CO₂], id: "co2"), summary: [von außen]))
+  },
+  source: ```typ
+#brainroot(title: [Fotosynthese],
+  links: (connect("licht", "dunkel", label: [ATP, NADPH]), connect("co2", "glucose", label: [C], bend: -25%, dash: "dotted")),
+  branch([Lichtreaktion], [Fotolyse], [ATP], [NADPH], id: "licht", cloud: true),
+  branch([Dunkelreaktion], [Calvin-Zyklus], branch([Glucose], id: "glucose"), id: "dunkel", summary: [Produkte]),
+  branch([Voraussetzungen], [Licht], [Wasser], branch([CO₂], id: "co2"), summary: [von außen]))
+  ```,
+  width: 100%,
+)
+
 = Anordnungen
 
 `layout` bestimmt, wie die Äste um die Wurzel liegen. `both` ist die
