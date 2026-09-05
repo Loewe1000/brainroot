@@ -189,12 +189,12 @@ direction; on the root it applies to the first level.
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
+    brainroot(width: 100%, title: branch([Start], equal: true), layout: "right", theme: "outline", palette: "plain",
       branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true),
       branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   },
   source: ```typ
-#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
+#brainroot(title: branch([Start], equal: true), layout: "right", theme: "outline", palette: "plain",
   branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true),
   branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   ```,

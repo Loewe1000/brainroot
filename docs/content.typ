@@ -194,12 +194,12 @@ für die erste Ebene.
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
+    brainroot(width: 100%, title: branch([Start], equal: true), layout: "right", theme: "outline", palette: "plain",
       branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true),
       branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   },
   source: ```typ
-#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
+#brainroot(title: branch([Start], equal: true), layout: "right", theme: "outline", palette: "plain",
   branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true),
   branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$, equal: true))
   ```,

@@ -224,7 +224,7 @@ A map with gaps and its solution from the same source:
 A probability tree with edge labels:
 
 ```typ
-#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
+#brainroot(title: branch([Start], equal: true), layout: "right", theme: "outline", palette: "plain",
   branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true),
   branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$, equal: true))
 ```
