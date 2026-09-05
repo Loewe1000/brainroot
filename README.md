@@ -43,10 +43,27 @@ as arguments.
 
 ## Parameters
 
-`branch(label, ..kids, color: none, side: auto)`
+Everything that shapes a map sits on one of four levels:
 
-- `color`: colour of the branch; `none` takes the next colour of the palette.
-- `side`: `left` or `right` forces the side. Both only on the first level.
+- **Theme**, the look of boxes and edges: `theme: "hand"` or a dictionary
+  overriding fields of one, `theme: (base: "hand", hand: (amplitude: 1))`.
+  All fields with their defaults are in `theme-defaults`.
+- **Palette**, the colours: `palette: "ocean"`, an array of colours, or
+  `(base: "ocean", root: black, ink: auto, ink-dark: black, ink-light: white)`.
+- **Layout** and **spacing**: `layout: "radial"` or
+  `(kind: "radial", start: 90deg, align-levels: false)`; `spacing: (level: 3.5em,
+  root: 6em, sibling: 0.7em, branch: 2em, max-width: 14em, brace: 0.6em,
+  summary: 0.5em, cloud: 0.6em, padding: 1em)`, all optional.
+- **Nodes**, `branch(label, ..kids, ...)`, the root included:
+  `title: branch([Energy], icon: emoji.bolt, fill: navy)`.
+
+A misspelt field in any of these is an error, not a silent nothing.
+
+`branch(label, ..kids, color: none, side: auto, icon: none, icon-at: "left",
+fill: auto, ink: auto, mark: false, blank: false, edge-label: none, id: none,
+summary: none, cloud: none, points: none)`
+
+- `color`: colour of the branch; `none` takes the next colour of the palette. `side`: `left` or `right` forces the side. Both only on the first level.
 - `icon`, `icon-at`: an icon, emoji or image `"left"` of the label or on `"top"`.
 - `fill`, `ink`: this node's fill (`none` gives a ring) and text colour.
 - `mark: true`: bold text and a strong border, for key terms.
@@ -55,42 +72,32 @@ as arguments.
 - `id`: a name for cross-links; `summary`: a labelled brace beyond the children; `cloud`: `true` or a colour behind the subtree.
 - `points`: points for grading; `brainroot-points(...)` adds them up, `show-points: true` shows badges.
 
-Labels are content: formulas (`[$E = m c^2$]`), images and `link()` work.
+In a list, `<name>` at the end of an item gives the node its `id`, an item
+that is nothing but `*bold*` marks it, one that is nothing but `_emphasised_`
+makes it a gap. Labels are content: formulas (`[$E = m c^2$]`), images and
+`link()` work.
 
-`brainroot(..branches, title: none, ...)`
+`brainroot(..branches, title: none, layout: "both", theme: "soft", palette:
+"poster", spacing: (:), wobble: 1, links: (), blanks: none, solution: false,
+solution-ink: auto, show-points: false, reveal: auto, width: auto, zoom:
+100%, background: none, alt: auto)`
 
-- `title`: label of the root. Without it, the first positional argument is the root.
-- `theme`: look of boxes and edges, see below. Default: `"soft"`.
-- `layout`: arrangement, see below. Default: `"both"`.
-- `start`: `radial` and `star` only, angle of the first branch. Default: `60deg`.
-- `wobble`: strength of the wobble in hand-drawn themes, a factor on the theme's `amplitude`. Default: `1`.
-- `palette`: name of a palette (see below), an array of colours, or `(colors: ..., root: ...)`. Default: `"poster"`.
-- `root-fill`: colour of the root. Default: `auto`, the palette's.
-- `tint`: how much the branch colour is lightened for the boxes. Default: `60%`.
-- `tint-min`: minimum luminance (0 to 1) of tinted fills; dark colours are lightened further. Default: `0.8`.
-- `ink`: text colour. Default: `auto`, then the fill's luminance decides between `ink-dark` (black) and `ink-light` (white); `ink-threshold` (0.55) is the boundary.
-- `scale`: font size per level relative to the surroundings. Default: `(1.3, 1.1, 1.0)`.
-- `bold-depth`: this many levels from the root are bold. Default: `2`.
-- `thickness`: line width per level. Default: `(0.27em, 0.14em)`.
-- `level-gap`, `root-gap`: distances along the direction of growth, parent to child and root to branch. Default: `3.5em`, `6em`.
-- `sibling-gap`, `branch-gap`: distances across, between siblings and between first-level branches. Default: `0.7em`, `2em`.
-- `max-width`: labels wider than this wrap. Default: `14em`.
-- `inset`: padding of the boxes. Default: `(x: 0.9em, y: 0.55em)`.
-
-- `icon`, `icon-at`: icon beside or above the root's label.
-- `background`, `padding`: a colour behind the map and the space around it.
-- `shade`: steps the branch colour per level, `20%` lighter towards the leaves, `-20%` darker. Default: `0%`.
-- `blanks`: draws `"leaves"`, `"branches"` or `"all"` nodes as gaps; `solution: true` fills them in, `solution-ink` colours the answers.
-- `edge-label-fill`: background of edge labels. Default: `white`.
+- `title`: the root, content or a `branch(...)`. Without it, the first positional argument is the root.
+- `wobble`: strength of the wobble in hand-drawn themes, a factor on the theme's `amplitude`.
 - `links`: cross-links, each `connect(from, to, label: none, arrow: true, dash: "dashed", bend: 30%, color: auto)`, addressing nodes by `id` (`"root"` is the root).
-- `brace-size`, `summary-gap`, `cloud-pad`: sizes of braces and clouds.
+- `blanks`: draws `"leaves"`, `"branches"` or `"all"` nodes as gaps; `solution: true` fills them in, `solution-ink` colours the answers.
+- `show-points`: badges with each node's points.
 - `reveal`: `auto`, the number of first-level branches to draw, or a function of the index; the layout stays put.
-- `align-levels: true`: every level on one line, as in an org chart.
+- `width`: `auto` for the natural size, or a length or ratio of the surrounding block to scale the whole map to, text included. `zoom`: a factor on top.
+- `background`: a colour behind the map, framed by `spacing.padding`.
 - `alt`: alternative text for tagged PDFs; `auto` writes the tree out.
-- `width`: `auto` for the natural size, or a length or ratio of the surrounding block to scale the whole map to, text included.
-- `zoom`: a factor on the whole map, on top of `width`. Default: `100%`.
 
-All lengths may be given in `em`; the defaults are, so a map follows the font size around it.
+Recurring settings become a preset:
+
+```typ
+#let map = brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))
+#map(title: [Forms of energy])[ ... ]
+```
 
 ## Layouts
 
@@ -173,13 +180,15 @@ A dictionary overrides individual fields of a theme:
   theme: (base: "outline", edge: "elbow", radius: 0pt), map)
 ```
 
-Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`, `"taper"`, `"comb"`), `fill` (`"tint"`,
-`"solid"`, `"white"`, `"none"`), `stroke` (border width), `radius`,
-`shape` (`"rect"`, `"circle"`, `"ellipse"`), `size` (a fixed diameter per
-depth, e.g. `(5em, 4em, 2.6em)`, for bubble trees), `underline`, `dash`
-(`"solid"`, `"dashed"`, `"dotted"`), `font`, `taper` (factors for
-`edge: "taper"`), `root` and `branches` with overrides for the root and the
-first level only, and `hand`: `none` or a dictionary with
+Fields: boxes `shape` (`"rect"`, `"circle"`, `"ellipse"`), `size` (a fixed
+diameter per depth, e.g. `(5em, 4em, 2.6em)`, for bubble trees), `fill`
+(`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke` (border width),
+`radius`, `inset`, `underline`, `font`, `scale` (font size per level),
+`bold-depth`, `tint`, `tint-min`, `shade` (colour steps per level); edges
+`edge` (`"curve"`, `"elbow"`, `"straight"`, `"taper"`, `"comb"`),
+`thickness` (per level), `dash` (`"solid"`, `"dashed"`, `"dotted"`), `taper`
+(factors for `edge: "taper"`), `edge-label-fill`; `root` and `branches` with
+overrides for the root and the first level only; and `hand`: `none` or a dictionary with
 `amplitude` (excursion in pt), `wavelength` (in pt), `randomness`
 (irregularity, 1 is a pure sine), `segment` (step in pt) and `passes` (how
 often each line is drawn).

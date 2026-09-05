@@ -3,8 +3,8 @@
 #import "../lib.typ": *
 #set page(width: auto, height: auto, margin: 4pt)
 #set text(size: 10pt)
-#brainroot(title: [#h(14pt)], root-fill: rgb("#1a1a2e"), layout: "radial", start: 90deg,
-  root-gap: 22pt, level-gap: 10pt, branch-gap: 6pt, thickness: (3pt,), inset: (x: 6pt, y: 6pt),
-  theme: (radius: 50%),
+#brainroot(title: branch([#h(14pt)], fill: rgb("#1a1a2e")), layout: (kind: "radial", start: 90deg),
+  theme: (radius: 50%, thickness: (3pt,), inset: (x: 6pt, y: 6pt)),
+  spacing: (root: 22pt, level: 10pt, branch: 6pt),
   branch([#h(6pt)]), branch([#h(6pt)]), branch([#h(6pt)]), branch([#h(6pt)]), branch([#h(6pt)]), branch([#h(6pt)]),
 )

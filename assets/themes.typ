@@ -18,6 +18,6 @@
     #set text(font: if t in ("hand", "scribble", "marker", "pencil") { "Patrick Hand" } else { "Helvetica" })
     #align(center)[#text(font: "Menlo", size: 7pt, t)]
     #v(2pt)
-    #brainroot(title: [Energy], theme: t, tiny, level-gap: 14pt, root-gap: 28pt, inset: (x: 5pt, y: 3pt))
+    #brainroot(title: [Energy], theme: (base: t, inset: (x: 5pt, y: 3pt)), tiny, spacing: (level: 14pt, root: 28pt))
   ])
 )

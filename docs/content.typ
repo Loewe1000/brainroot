@@ -56,6 +56,37 @@ eingerückte Punkte zu seinen Kindern.
   width: 100%,
 )
 
+Drei Zeichen in der Liste tragen Knotenoptionen: ein Typst-Label `<name>`
+am Ende gibt dem Knoten seine `id` für Querverbindungen, ein Punkt, der
+nur aus `*Fettschrift*` besteht, hebt ihn hervor, einer nur aus
+`_Kursivschrift_` wird zur Lücke.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Fotosynthese], links: (connect("licht", "dunkel", label: [ATP]),))[
+      - Lichtreaktion <licht>
+        - *Fotolyse*
+        - _ATP_
+      - Dunkelreaktion <dunkel>
+        - Calvin-Zyklus
+        - _Glucose_
+    ]
+  },
+  source: ```typ
+#brainroot(title: [Fotosynthese], links: (connect("licht", "dunkel", label: [ATP]),))[
+  - Lichtreaktion <licht>
+    - *Fotolyse*
+    - _ATP_
+  - Dunkelreaktion <dunkel>
+    - Calvin-Zyklus
+    - _Glucose_
+]
+  ```,
+  width: 100%,
+)
+
 Wer einen Ast genauer bestimmen will, schreibt ihn als `branch(label, ..kinder)`.
 Ein Kind ist dann entweder Content, also ein Blatt, oder wieder ein
 `branch(...)`. Liste und `branch`-Aufrufe dürfen nebeneinander stehen; ohne
@@ -72,14 +103,14 @@ die übrigen nach links. `side: left` oder `side: right` legt einen Ast fest,
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, [Fotosynthese], root-fill: green.lighten(50%), max-width: 3cm,
+    brainroot(width: 100%, title: branch([Fotosynthese], fill: green.lighten(50%)), spacing: (max-width: 3cm),
       branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten]), [ATP], side: right),
       branch([Dunkelreaktion], [Calvin-Zyklus], [Glucose], color: purple),
       branch([Voraussetzungen], [Licht], [Wasser], [CO₂], side: left),
     )
   },
   source: ```typ
-#brainroot([Fotosynthese], root-fill: green.lighten(50%), max-width: 3cm,
+#brainroot(title: branch([Fotosynthese], fill: green.lighten(50%)), spacing: (max-width: 3cm),
   branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten]), [ATP], side: right),
   branch([Dunkelreaktion], [Calvin-Zyklus], [Glucose], color: purple),
   branch([Voraussetzungen], [Licht], [Wasser], [CO₂], side: left),
@@ -105,7 +136,8 @@ die übrigen nach links. `side: left` oder `side: right` legt einen Ast fest,
 
 Eine Beschriftung ist Content: Formeln, Bilder und Links gehen wie überall.
 Ein `icon` steht links neben der Beschriftung oder mit `icon-at: "top"`
-darüber, auch an der Wurzel. Je Knoten lassen sich `fill` (eine Farbe oder
+darüber. Die Wurzel ist auch ein `branch`: `title: branch([Energie], icon:
+..., fill: ...)`. Je Knoten lassen sich `fill` (eine Farbe oder
 `none` für einen Ring), `ink` und `mark: true` für einen hervorgehobenen
 Fachbegriff setzen.
 
@@ -113,13 +145,13 @@ Fachbegriff setzen.
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+    brainroot(width: 100%, title: branch([Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top"),
       branch([Formel], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
       branch([Link], link("https://typst.app")[typst.app]),
       branch([Wichtig], branch([Kernbegriff], mark: true), branch([Ring], fill: none), branch([Rot], ink: red)))
   },
   source: ```typ
-#brainroot(title: [Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+#brainroot(title: branch([Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top"),
   branch([Formel], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
   branch([Link], link("https://typst.app")[typst.app]),
   branch([Wichtig], branch([Kernbegriff], mark: true), branch([Ring], fill: none), branch([Rot], ink: red)))
@@ -240,8 +272,10 @@ fächert von der Wurzel aus, jeder Teilbaum bekommt seinen eigenen Sektor.
 waagerecht nach außen. `fishbone` ist das Ursache-Wirkungs-Diagramm nach
 Ishikawa: die Wurzel als Kopf einer Gräte, die Äste als Rippen abwechselnd
 oben und unten, die Blätter entlang der Rippen; zwei Ebenen unter der
-Wurzel. `align-levels: true` setzt in den Baum-Anordnungen jede Ebene auf
-eine Linie, wie in einem Organigramm.
+Wurzel. `layout` nimmt auch ein Dictionary: `(kind: "down", align-levels:
+true)` setzt in den Baum-Anordnungen jede Ebene auf eine Linie, wie in einem
+Organigramm; `start` ist der Winkel des ersten Astes bei `radial` und `star`.
+Die Abstände stehen in `spacing`, siehe `spacing-defaults`.
 
 
 #show-example(
@@ -308,12 +342,12 @@ eine Linie, wie in einem Organigramm.
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Stoffe], layout: "down", theme: "blocks", align-levels: true,
+    brainroot(width: 100%, title: [Stoffe], layout: (kind: "down", align-levels: true), theme: "blocks",
       branch([Reinstoffe], branch([Elemente], [Metalle], [Nichtmetalle]), [Verbindungen]),
       branch([Gemische], [homogen], [heterogen]))
   },
   source: ```typ
-#brainroot(title: [Stoffe], layout: "down", theme: "blocks", align-levels: true,
+#brainroot(title: [Stoffe], layout: (kind: "down", align-levels: true), theme: "blocks",
   branch([Reinstoffe], branch([Elemente], [Metalle], [Nichtmetalle]), [Verbindungen]),
   branch([Gemische], [homogen], [heterogen]))
   ```,
@@ -323,7 +357,7 @@ eine Linie, wie in einem Organigramm.
 Bei `radial` und `star` steht der erste Ast bei `start` (Standard `60deg`),
 die weiteren folgen im Uhrzeigersinn. Bei `radial` teilen sich die Kinder den
 Sektor ihres Elternknotens, gewichtet nach der Größe ihrer Teilbäume, und
-liegen auf dem Ring ihrer Tiefe; die Ringe beginnen bei `root-gap` und werden
+liegen auf dem Ring ihrer Tiefe; die Ringe beginnen bei `spacing.root` und werden
 so weit gedehnt, bis sich keine zwei Kästen überschneiden.
 
 = Paletten
@@ -360,7 +394,10 @@ Karte gezeigt:
 
 Eigene Farben gehen als Array, `palette: (red, blue, green)`, oder mit
 Wurzelfarbe als Dictionary, `palette: (colors: (red, blue), root: black)`.
-`root-fill` überschreibt die Wurzelfarbe in jedem Fall.
+Eine Palette darf auch `ink`, `ink-dark`, `ink-light` und `ink-threshold`
+setzen, die Schriftfarben; `base` nimmt eine eingebaute Palette als
+Ausgangspunkt: `palette: (base: "ocean", root: black)`. Die Wurzel selbst
+färbt `title: branch([...], fill: ...)`.
 
 = Themes
 
@@ -407,8 +444,8 @@ Kreise zu kurzen Beschriftungen, ein langes Wort macht den Kreis groß. `shade` 
     import "../lib.typ": *
     set text(size: 8pt)
     brainroot(width: 100%, title: [Energie], layout: "radial", palette: "sunset",
-      theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
-      thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[
+      theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight",
+        thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%))[
       - Bewegung
         - Wind
         - Fahrt
@@ -421,8 +458,8 @@ Kreise zu kurzen Beschriftungen, ein langes Wort macht den Kreis groß. `shade` 
   },
   source: ```typ
 #brainroot(title: [Energie], layout: "radial", palette: "sunset",
-  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
-  thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[ ... ]
+  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight",
+    thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%))[ ... ]
   ```,
   width: 100%,
 )
@@ -475,12 +512,13 @@ Linie gezogen wird). Jedes Theme lässt sich damit handgezeichnet machen:
 == Ein Theme anpassen
 
 Ein Dictionary überschreibt einzelne Felder; `base` wählt das Ausgangstheme,
-sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`,
-`"taper"`, `"comb"`), `taper` (Faktoren für die Verjüngung), `branches`
-(Überschreibungen nur für die erste Ebene),
-`fill` (`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke`, `radius`,
-`shape`, `size`, `underline`, `dash`, `font`, `hand` und `root` mit
-Überschreibungen nur für die Wurzel. `layout` legt alle Äste auf eine Seite.
+sonst gilt `soft`. Ein Theme trägt alles, was das Aussehen betrifft:
+Kästen (`shape`, `size`, `fill`, `stroke`, `radius`, `inset`, `underline`,
+`font`, `scale`, `bold-depth`, `tint`, `tint-min`, `shade`), Kanten (`edge`,
+`thickness`, `dash`, `taper`, `edge-label-fill`), `hand` für das Wackeln,
+und `root` und `branches` mit Überschreibungen nur für die Wurzel und die
+erste Ebene. `theme-defaults` listet jedes Feld mit seiner Vorgabe; ein
+falsch geschriebenes Feld ist ein Fehler, kein stilles Nichts.
 
 #show-example(
   rendered: {
@@ -496,30 +534,34 @@ sonst gilt `soft`. Felder: `edge` (`"curve"`, `"elbow"`, `"straight"`,
   width: 100%,
 )
 
-= Gestalt
+= Die vier Ebenen
 
-- `ink` ist die Schriftfarbe. Bei `auto` wählt jeder Kasten nach der
-  Helligkeit seiner Füllung zwischen `ink-dark` und `ink-light`, die Grenze
-  setzt `ink-threshold`. So bleibt die Schrift auch auf dunklen Paletten wie
-  `grayscale` oder `mono` lesbar.
-- `scale` gibt die Schriftgröße je Ebene relativ zur Umgebung an, `bold-depth`
-  die Zahl der fetten Ebenen ab der Wurzel.
-- `thickness` gibt die Linienstärke je Ebene an; der letzte Wert gilt für
-  alle tieferen Ebenen.
-- `tint` hellt die Astfarbe für die Kästen auf; `tint-min` sorgt dafür, dass
-  auch dunkle Palettenfarben helle Kästen ergeben. `root-fill` färbt die Wurzel.
-- `level-gap` und `root-gap` sind die Abstände in Wachstumsrichtung (Eltern
-  zu Kind, Wurzel zu Ast), `sibling-gap` und `branch-gap` die quer dazu
-  (zwischen Geschwistern, zwischen den Ästen der ersten Ebene).
-- `max-width` begrenzt die Breite einer Beschriftung; längerer Text wird
-  umgebrochen. `none` bricht nie um.
-- `width` skaliert die fertige Karte samt Schrift auf eine Breite, als Länge
-  oder als Anteil des umgebenden Blocks (`width: 100%`); `zoom` ist ein
-  Faktor obendrauf. Beide ändern nur die Größe, nie das Layout.
-- `inset` ist der Innenabstand der Kästen.
-- `shade` stuft die Astfarbe je Ebene ab, `20%` heller zu den Blättern hin,
-  `-20%` dunkler. `background` legt eine Farbe hinter die Karte, `padding`
-  den Abstand dazu.
+Alles, was eine Karte bestimmt, liegt auf einer von vier Ebenen, und jede
+hat eine Stelle:
+
+- *Theme* ist das Aussehen von Kästen und Kanten: Form, Füllung, Rahmen,
+  Schriftgrößen je Ebene, Linienstärken, Abstufung der Farben, das Wackeln.
+  Ein Name oder ein Dictionary, Felder in `theme-defaults`.
+- *Palette* ist die Zuordnung der Farben: die der Äste, der Wurzel, der
+  Schrift. Ein Name, ein Array von Farben oder ein Dictionary.
+- *Layout* ist die Anordnung, `spacing` sind die Abstände: `level` und
+  `root` in Wachstumsrichtung, `sibling` und `branch` quer dazu, `max-width`
+  für den Umbruch, `brace`, `summary`, `cloud` und `padding`. Felder in
+  `layout-defaults` und `spacing-defaults`.
+- *Knoten* sind `branch(...)`, die Wurzel eingeschlossen: Icon, Füllung,
+  Schriftfarbe, Hervorhebung, Lücke, Kantenbeschriftung, `id`, Klammer,
+  Wolke, Punkte.
+
+Was auf `brainroot` selbst bleibt, sind die Regler je Karte: `wobble`,
+`links`, `blanks`, `solution`, `solution-ink`, `show-points`, `reveal`,
+`width`, `zoom`, `background` und `alt`. `width` skaliert die fertige Karte
+samt Schrift auf eine Breite, als Länge oder als Anteil des umgebenden
+Blocks (`width: 100%`); `zoom` ist ein Faktor obendrauf. Beide ändern nur
+die Größe, nie das Layout.
+
+Was in einem Dokument immer gleich ist, wird zur Vorgabe: `#let karte =
+brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))`, und
+danach genügt `#karte(title: [...])[...]`.
 
 = Barrierefreiheit und Leistung
 
@@ -535,4 +577,10 @@ teilen.
 
 = Funktionen
 
-#show-module(read("../lib.typ"), name: "brainroot")
+#show-module(read("../lib.typ") + "\n" + read("../src/input.typ"), name: "brainroot")
+
+== Vorgaben
+
+Die Felder von Theme, Palette, Layout und Abständen, mit ihren Vorgaben:
+
+#show-module(read("../src/themes.typ") + "\n" + read("../src/palettes.typ") + "\n" + read("../src/options.typ"), name: "brainroot")

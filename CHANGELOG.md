@@ -2,7 +2,26 @@
 
 ## [0.2.0] — unreleased
 
+### Changed
+
+- **Four levels instead of forty parameters.** Everything about the look
+  is in the theme (`scale`, `bold-depth`, `thickness`, `inset`, `tint`,
+  `tint-min`, `shade`, `edge-label-fill` moved there), the text colours in
+  the palette (`ink`, `ink-dark`, `ink-light`, `ink-threshold`), the
+  arrangement in `layout` (a name or `(kind:, start:, align-levels:)`), the
+  distances in `spacing` (`level`, `root`, `sibling`, `branch`, `max-width`,
+  `brace`, `summary`, `cloud`, `padding`). The root is a `branch`:
+  `title: branch([...], icon: ..., fill: ...)` replaces `icon`, `icon-at`
+  and `root-fill`. `brainroot()` keeps 17 parameters. `theme-defaults`,
+  `layout-defaults` and `spacing-defaults` list every field; a misspelt
+  field or an unknown argument is an error.
+- **Modules.** The source is split into `src/`.
+
 ### Added
+
+- **List marks.** In a list, `<name>` gives a node its `id`, an item that
+  is nothing but `*bold*` marks it, one that is nothing but `_emphasised_`
+  is a gap.
 
 - **Icons and images in nodes.** `branch(..., icon: emoji.bolt)` and
   `brainroot(icon: ..., icon-at: "top")` set an icon, emoji or image beside

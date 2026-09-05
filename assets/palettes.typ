@@ -15,6 +15,6 @@
   ..("poster", "pastel", "grayscale", "mono", "plain", "earth", "ocean", "sunset", "forest", "neon").map(p => [
     #align(center)[#text(font: "Menlo", size: 7pt, p)]
     #v(2pt)
-    #brainroot(title: [Energy], palette: p, tiny, level-gap: 14pt, root-gap: 28pt, inset: (x: 5pt, y: 3pt))
+    #brainroot(title: [Energy], palette: p, tiny, spacing: (level: 14pt, root: 28pt), theme: (inset: (x: 5pt, y: 3pt)))
   ])
 )

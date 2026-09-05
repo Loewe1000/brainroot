@@ -18,7 +18,7 @@
 #pagebreak()
 
 // Drei Ebenen, explizite Seiten, Umbruch langer Beschriftungen
-#brainroot([Fotosynthese], max-width: 3.5cm, root-fill: green.lighten(50%),
+#brainroot(title: branch([Fotosynthese], fill: green.lighten(50%)), spacing: (max-width: 3.5cm),
   branch([Lichtreaktion], branch([Fotolyse], [Wasser wird gespalten, Sauerstoff entsteht]), [ATP], [NADPH], side: right),
   branch([Dunkelreaktion], [Calvin-Zyklus], [Glucose]),
   branch([Voraussetzungen], [Licht], [Wasser], [Kohlenstoffdioxid], [Chlorophyll], side: left),
@@ -148,7 +148,7 @@
 // 0.2.0: icons, node overrides, background
 #set page(width: auto, height: auto, margin: 1cm)
 #set text(font: "Helvetica", size: 10pt)
-#brainroot(title: [Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top", background: rgb("#eef4fb"),
+#brainroot(title: branch([Energie], icon: text(size: 1.6em, emoji.bolt), icon-at: "top"), background: rgb("#eef4fb"),
   branch([Formel], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
   branch([Link], link("https://typst.app")[typst.app]),
   branch([Wichtig], branch([Kernbegriff], mark: true), branch([Ring], fill: none), branch([Rot], ink: red)))
@@ -161,8 +161,8 @@
 #pagebreak()
 // Formen, Farbverlauf, Kantenbeschriftung
 #brainroot(title: [Energie], layout: "radial", palette: "sunset",
-  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
-  thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[
+  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight",
+    thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%))[
   - Bewegung
     - Wind
     - Fahrt
@@ -175,11 +175,11 @@
 #v(5mm)
 #brainroot(title: [Mind Map], theme: (base: "outline", shape: "ellipse"), palette: "ocean", karte)
 #v(5mm)
-#brainroot(title: [Stoffe], layout: "down", theme: "blocks", shade: 30%,
+#brainroot(title: [Stoffe], layout: "down", theme: (base: "blocks", shade: 30%),
   branch([Reinstoffe], branch([Elemente], [Metalle], [Nichtmetalle]), [Verbindungen]),
   branch([Gemische], [homogen], [heterogen]))
 #v(5mm)
-#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain", level-gap: 5em,
+#brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain", spacing: (level: 5em),
   branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
   branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
 
@@ -200,7 +200,7 @@
 // organic, twigs, fishbone, align-levels, points, reveal
 #brainroot(title: [Energiearten], theme: "organic", karte)
 #v(5mm)
-#brainroot(title: [Wasserkreislauf], theme: "twigs", layout: "star", palette: "ocean", icon: text(size: 2em, emoji.drop), icon-at: "top",
+#brainroot(title: branch([Wasserkreislauf], icon: text(size: 2em, emoji.drop), icon-at: "top"), theme: "twigs", layout: "star", palette: "ocean",
   branch([Verdunstung], [Sonne erwärmt Wasser], [Wasser wird zu Dampf], [Dampf steigt auf]),
   branch([Kondensation], [Dampf kühlt ab], [Tröpfchen bilden sich], [Wolken entstehen]),
   branch([Niederschlag], [Tropfen werden schwer], [Regen, Schnee, Hagel]),
@@ -216,7 +216,7 @@
   branch([Reinstoffe], branch([Elemente], branch([Metalle], points: 1), branch([Nichtmetalle], points: 1)), branch([Verbindungen], points: 2)),
   branch([Gemische], branch([homogen], points: 1), branch([heterogen], points: 1)),
 )
-#brainroot(title: [Stoffe], layout: "down", theme: "blocks", align-levels: true, show-points: true, ..stoffe)
+#brainroot(title: [Stoffe], layout: (kind: "down", align-levels: true), theme: "blocks", show-points: true, ..stoffe)
 Punkte: #brainroot-points(..stoffe)
 #v(5mm)
 #brainroot(title: [Energiearten], reveal: 2, karte)

@@ -55,6 +55,36 @@ children.
   width: 100%,
 )
 
+Three marks in the list carry node options: a Typst label `<name>` at the
+end gives the node its `id` for cross-links, an item that is nothing but
+`*bold*` highlights it, one that is nothing but `_emphasised_` becomes a gap.
+
+#show-example(
+  rendered: {
+    import "../lib.typ": *
+    set text(size: 8pt)
+    brainroot(width: 100%, title: [Photosynthesis], links: (connect("light", "dark", label: [ATP]),))[
+      - Light reaction <light>
+        - *Photolysis*
+        - _ATP_
+      - Dark reaction <dark>
+        - Calvin cycle
+        - _Glucose_
+    ]
+  },
+  source: ```typ
+#brainroot(title: [Photosynthesis], links: (connect("light", "dark", label: [ATP]),))[
+  - Light reaction <light>
+    - *Photolysis*
+    - _ATP_
+  - Dark reaction <dark>
+    - Calvin cycle
+    - _Glucose_
+]
+  ```,
+  width: 100%,
+)
+
 To describe a branch in more detail, write it as `branch(label, ..children)`.
 A child is then either content, a leaf, or another `branch(...)`. A list and
 `branch` calls may stand side by side; without `title` the first argument is
@@ -71,14 +101,14 @@ it its own colour instead of the next one from the palette.
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, [Photosynthesis], root-fill: green.lighten(50%), max-width: 3cm,
+    brainroot(width: 100%, title: branch([Photosynthesis], fill: green.lighten(50%)), spacing: (max-width: 3cm),
       branch([Light reaction], branch([Photolysis], [Water is split]), [ATP], side: right),
       branch([Dark reaction], [Calvin cycle], [Glucose], color: purple),
       branch([Requirements], [Light], [Water], [CO₂], side: left),
     )
   },
   source: ```typ
-#brainroot([Photosynthesis], root-fill: green.lighten(50%), max-width: 3cm,
+#brainroot(title: branch([Photosynthesis], fill: green.lighten(50%)), spacing: (max-width: 3cm),
   branch([Light reaction], branch([Photolysis], [Water is split]), [ATP], side: right),
   branch([Dark reaction], [Calvin cycle], [Glucose], color: purple),
   branch([Requirements], [Light], [Water], [CO₂], side: left),
@@ -103,21 +133,21 @@ it its own colour instead of the next one from the palette.
 = Nodes
 
 A label is content: formulas, images and links work as they do anywhere. An
-`icon` sits left of the label or, with `icon-at: "top"`, above it, on the
-root too. Per node you can set `fill` (a colour, or `none` for a ring),
+`icon` sits left of the label or, with `icon-at: "top"`, above it. The root
+is a `branch` too: `title: branch([Energy], icon: ..., fill: ...)`. Per node you can set `fill` (a colour, or `none` for a ring),
 `ink`, and `mark: true` for a highlighted key term.
 
 #show-example(
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Energy], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+    brainroot(width: 100%, title: branch([Energy], icon: text(size: 1.6em, emoji.bolt), icon-at: "top"),
       branch([Formula], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
       branch([Link], link("https://typst.app")[typst.app]),
       branch([Important], branch([Key term], mark: true), branch([Ring], fill: none), branch([Red], ink: red)))
   },
   source: ```typ
-#brainroot(title: [Energy], icon: text(size: 1.6em, emoji.bolt), icon-at: "top",
+#brainroot(title: branch([Energy], icon: text(size: 1.6em, emoji.bolt), icon-at: "top"),
   branch([Formula], [$E = 1/2 m v^2$], [$E = m g h$], icon: emoji.abacus),
   branch([Link], link("https://typst.app")[typst.app]),
   branch([Important], branch([Key term], mark: true), branch([Ring], fill: none), branch([Red], ink: red)))
@@ -235,8 +265,11 @@ from the root, every subtree in a sector of its own. `star` only puts the
 branches on a circle around the root, their subtrees grow horizontally
 outward. `fishbone` is the Ishikawa cause-and-effect diagram: the root as
 the head of a spine, the branches as ribs alternating above and below, the
-leaves along the ribs; two levels below the root. `align-levels: true` puts
-every level on one line in the tree layouts, as in an org chart.
+leaves along the ribs; two levels below the root. `layout` also takes a
+dictionary: `(kind: "down", align-levels: true)` puts every level on one
+line in the tree layouts, as in an org chart; `start` is the angle of the
+first branch in `radial` and `star`. Distances live in `spacing`, see
+`spacing-defaults`.
 
 
 #show-example(
@@ -303,12 +336,12 @@ every level on one line in the tree layouts, as in an org chart.
   rendered: {
     import "../lib.typ": *
     set text(size: 8pt)
-    brainroot(width: 100%, title: [Substances], layout: "down", theme: "blocks", align-levels: true,
+    brainroot(width: 100%, title: [Substances], layout: (kind: "down", align-levels: true), theme: "blocks",
       branch([Pure substances], branch([Elements], [Metals], [Non-metals]), [Compounds]),
       branch([Mixtures], [homogeneous], [heterogeneous]))
   },
   source: ```typ
-#brainroot(title: [Substances], layout: "down", theme: "blocks", align-levels: true,
+#brainroot(title: [Substances], layout: (kind: "down", align-levels: true), theme: "blocks",
   branch([Pure substances], branch([Elements], [Metals], [Non-metals]), [Compounds]),
   branch([Mixtures], [homogeneous], [heterogeneous]))
   ```,
@@ -318,7 +351,7 @@ every level on one line in the tree layouts, as in an org chart.
 With `radial` and `star` the first branch sits at `start` (default `60deg`),
 the others follow clockwise. With `radial` the children share their parent's
 sector, weighted by the size of their subtrees, and sit on the ring of their
-depth; the rings begin at `root-gap` and are stretched until no two boxes
+depth; the rings begin at `spacing.root` and are stretched until no two boxes
 overlap.
 
 = Palettes
@@ -355,7 +388,10 @@ with the same map:
 
 Your own colours go in as an array, `palette: (red, blue, green)`, or with a
 root colour as a dictionary, `palette: (colors: (red, blue), root: black)`.
-`root-fill` overrides the root colour in any case.
+A palette may also set `ink`, `ink-dark`, `ink-light` and `ink-threshold`,
+the text colours; `base` takes a built-in palette as the starting point:
+`palette: (base: "ocean", root: black)`. The root itself is coloured by
+`title: branch([...], fill: ...)`.
 
 = Themes
 
@@ -402,8 +438,8 @@ level.
     import "../lib.typ": *
     set text(size: 8pt)
     brainroot(width: 100%, title: [Energy], layout: "radial", palette: "sunset",
-      theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
-      thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[
+      theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight",
+        thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%))[
       - Motion
         - Wind
         - Travel
@@ -416,8 +452,8 @@ level.
   },
   source: ```typ
 #brainroot(title: [Energy], layout: "radial", palette: "sunset",
-  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight"),
-  thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%)[ ... ]
+  theme: (fill: "solid", shape: "circle", size: (5em, 4em, 2.8em), edge: "straight",
+    thickness: (0.5em, 0.25em), scale: (1.1, 0.9, 0.7), shade: 25%))[ ... ]
   ```,
   width: 100%,
 )
@@ -470,12 +506,13 @@ drawn). Any theme can be made hand-drawn with it:
 == Adapting a theme
 
 A dictionary overrides individual fields; `base` picks the starting theme,
-otherwise `soft`. Fields: `edge` (`"curve"`, `"elbow"`, `"straight"`,
-`"taper"`, `"comb"`), `taper` (factors for the thinning), `branches`
-(overrides for the first level only),
-`fill` (`"tint"`, `"solid"`, `"white"`, `"none"`), `stroke`, `radius`,
-`shape`, `size`, `underline`, `dash`, `font`, `hand` and `root` with overrides
-for the root only. `layout` puts all branches on one side.
+otherwise `soft`. A theme carries everything about the look: boxes
+(`shape`, `size`, `fill`, `stroke`, `radius`, `inset`, `underline`, `font`,
+`scale`, `bold-depth`, `tint`, `tint-min`, `shade`), edges (`edge`,
+`thickness`, `dash`, `taper`, `edge-label-fill`), `hand` for the wobble,
+and `root` and `branches` with overrides for the root and the first level
+only. `theme-defaults` lists every field with its default; a misspelt field
+is an error, not a silent nothing.
 
 #show-example(
   rendered: {
@@ -491,30 +528,33 @@ for the root only. `layout` puts all branches on one side.
   width: 100%,
 )
 
-= Appearance
+= The four levels
 
-- `ink` is the text colour. With `auto`, every box picks between `ink-dark`
-  and `ink-light` by the luminance of its fill; `ink-threshold` sets the
-  boundary. That keeps the text readable on dark palettes such as
-  `grayscale` or `mono`.
-- `scale` gives the font size per level relative to the surroundings,
-  `bold-depth` the number of bold levels from the root.
-- `thickness` gives the line width per level; the last value holds for all
-  deeper levels.
-- `tint` lightens the branch colour for the boxes; `tint-min` makes sure that
-  even dark palette colours yield light boxes. `root-fill` colours the root.
-- `level-gap` and `root-gap` are the distances along the direction of growth
-  (parent to child, root to branch), `sibling-gap` and `branch-gap` those
-  across (between siblings, between first-level branches).
-- `max-width` limits the width of a label; longer text wraps. `none` never
-  wraps.
-- `width` scales the finished map, text included, to a width given as a
-  length or as a share of the surrounding block (`width: 100%`); `zoom` is a
-  factor on top. Both change only the size, never the layout.
-- `inset` is the padding of the boxes.
-- `shade` steps the branch colour per level, `20%` lighter towards the
-  leaves, `-20%` darker. `background` paints a colour behind the map,
-  `padding` the space around it.
+Everything that shapes a map sits on one of four levels, and each has its
+place:
+
+- *Theme* is the look of boxes and edges: shape, fill, border, font sizes
+  per level, line widths, colour steps, the wobble. A name or a dictionary,
+  fields in `theme-defaults`.
+- *Palette* assigns the colours: of the branches, the root, the text. A
+  name, an array of colours or a dictionary.
+- *Layout* is the arrangement, `spacing` the distances: `level` and
+  `root` along the direction of growth, `sibling` and `branch` across,
+  `max-width` for wrapping, `brace`, `summary`, `cloud` and `padding`.
+  Fields in `layout-defaults` and `spacing-defaults`.
+- *Nodes* are `branch(...)`, the root included: icon, fill, ink,
+  highlight, gap, edge label, `id`, brace, cloud, points.
+
+What stays on `brainroot` itself are the knobs per map: `wobble`, `links`,
+`blanks`, `solution`, `solution-ink`, `show-points`, `reveal`, `width`,
+`zoom`, `background` and `alt`. `width` scales the finished map, text
+included, to a width given as a length or as a share of the surrounding
+block (`width: 100%`); `zoom` is a factor on top. Both change only the
+size, never the layout.
+
+Whatever is the same throughout a document becomes a preset: `#let map =
+brainroot.with(theme: "hand", palette: "ocean", spacing: (level: 5em))`,
+after which `#map(title: [...])[...]` is enough.
 
 = Accessibility and performance
 
@@ -529,4 +569,10 @@ read, and that is the reason to split them.
 
 = Functions
 
-#show-module(read("../lib.typ"), name: "brainroot")
+#show-module(read("../lib.typ") + "\n" + read("../src/input.typ"), name: "brainroot")
+
+== Defaults
+
+The fields of theme, palette, layout and spacing, with their defaults:
+
+#show-module(read("../src/themes.typ") + "\n" + read("../src/palettes.typ") + "\n" + read("../src/options.typ"), name: "brainroot")

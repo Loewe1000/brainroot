@@ -92,7 +92,7 @@ sollte sich dort einklinken statt etwas Eigenes zu erfinden:
 
 ## ToDos, nach Nutzen je Aufwand
 
-Stand: alle 18 sind in 0.2.0 umgesetzt; die Listen-Syntax kennt die Knotenoptionen noch nicht.
+Stand: alle 18 sind in 0.2.0 umgesetzt, dazu die Listen-Syntax mit `<id>`, `*Hervorhebung*` und `_Lücke_`.
 
 Aufwand: S bis zu einem Nachmittag, M ein bis zwei Tage, L mehr.
 
