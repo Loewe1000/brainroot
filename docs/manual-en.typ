@@ -12,6 +12,7 @@
 #set text(lang: "en")
 
 #show: docs.with(
+  lang: "en",
   toml: toml("../typst.toml"),
   // The logo instead of the name in the header, as SVG: Typst turns the
   // text into paths on export, so it hangs on no font. The web header is
