@@ -1,4 +1,4 @@
-<img src="assets/logo-map.svg" alt="brainroot: the word as the root of a small mind map with six coloured branches" width="520">
+<img src="assets/logo-hand.svg" alt="brainroot: the word as the root of a small hand-drawn mind map with six coloured branches" width="560">
 
 # brainroot
 
