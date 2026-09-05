@@ -204,8 +204,8 @@ A probability tree with edge labels:
 
 ```typ
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
-  branch([Heads], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]),
-  branch([Tails], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]))
+  branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
+  branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
 ```
 
 ## Pictures and logo

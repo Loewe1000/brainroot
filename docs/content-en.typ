@@ -158,13 +158,13 @@ the mind map into a probability tree or a decision tree.
     import "../lib.typ": *
     set text(size: 8pt)
     brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
-      branch([Heads], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]),
-      branch([Tails], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]))
+      branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
+      branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
   },
   source: ```typ
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
-  branch([Heads], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]),
-  branch([Tails], branch([Heads], edge-label: [1/2]), branch([Tails], edge-label: [1/2]), edge-label: [1/2]))
+  branch([Heads], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$),
+  branch([Tails], branch([Heads], edge-label: $1/2$), branch([Tails], edge-label: $1/2$), edge-label: $1/2$))
   ```,
   width: 100%,
 )

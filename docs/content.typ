@@ -161,13 +161,13 @@ Entscheidungsbäume.
     import "../lib.typ": *
     set text(size: 8pt)
     brainroot(width: 100%, title: [Start], layout: "right", theme: "outline", palette: "plain",
-      branch([Kopf], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]),
-      branch([Zahl], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]))
+      branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
+      branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
   },
   source: ```typ
 #brainroot(title: [Start], layout: "right", theme: "outline", palette: "plain",
-  branch([Kopf], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]),
-  branch([Zahl], branch([Kopf], edge-label: [1/2]), branch([Zahl], edge-label: [1/2]), edge-label: [1/2]))
+  branch([Kopf], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$),
+  branch([Zahl], branch([Kopf], edge-label: $1/2$), branch([Zahl], edge-label: $1/2$), edge-label: $1/2$))
   ```,
   width: 100%,
 )
