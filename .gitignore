@@ -1,0 +1,4 @@
+# Local bundle build of the manual
+docs/build/
+*.pdf
+.DS_Store
