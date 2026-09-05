@@ -1,4 +1,4 @@
-<img src="assets/logo-hand.svg" alt="brainroot: the word as the root of a small hand-drawn mind map with six coloured branches" width="560">
+<img src="assets/logo.svg" alt="brainroot: the word as the root of a small hand-drawn mind map with six coloured branches" width="560">
 
 # brainroot
 
@@ -250,11 +250,8 @@ about two.
 
 ## Pictures and logo
 
-Everything under `assets/` is drawn by brainroot itself; `assets/build.sh`
-renders the SVGs. The logo comes in five variants: `logo-map` (the word as
-root of a small map), `logo-hand` (the same, hand-drawn), `logo-lines`
-(bare lines), `logo-roots` (the roots, top-down) and `logo-mark` (a square
-mark without words, for icons).
+Everything under `assets/` is drawn by brainroot itself, the logo included;
+`assets/build.sh` renders the SVGs.
 
 ## License
 
