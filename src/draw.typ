@@ -306,6 +306,13 @@
   _edge-label-beside((0pt, 0pt), c0, c1, p1, _prefer(du, vertical), label, opts)
 }
 
+// A hidden subtree (`reveal`) still claims its room: an invisible rectangle
+// over its extent keeps the canvas, and with it the map, the same size.
+#let _ghost(t, m, u, dir, opts, vertical) = {
+  import cetz.draw: rect
+  rect(_xy(m, u + t.lo, vertical), _xy(m + dir * t.extent, u + t.hi, vertical), stroke: none, fill: none)
+}
+
 // Stacks branches on u, centred around 0, and draws them with their root edge.
 #let _draw-stack(side, dir, m-inner, m1, opts, vertical) = {
   let total = side.map(t => t.size).sum(default: 0pt) + opts.branch-gap * calc.max(side.len() - 1, 0)
@@ -313,7 +320,9 @@
   for t in side {
     let tu = cu - t.lo
     let au = if opts.theme.underline and not vertical { tu + t.size-u / 2 } else { tu }
-    if not t.at("hidden", default: false) {
+    if t.at("hidden", default: false) {
+      _ghost(t, m1, tu, dir, opts, vertical)
+    } else {
       _root-edge(_xy(m1, au, vertical), dir * m-inner, _stroke(0, t.color, opts), opts, vertical,
         label: t.node.edge-label, du: tu)
       _draw-tree(t, m1, tu, dir, opts, vertical)

@@ -1,7 +1,7 @@
 // The layouts that are not trees: star, radial and fishbone.
 
 #import "@preview/cetz:0.5.2"
-#import "draw.typ": _stroke, _path, _seg, _root-edge, _draw-tree, _draw-node, _edge-label, _edge-label-beside, _mid, _bez
+#import "draw.typ": _stroke, _path, _seg, _root-edge, _draw-tree, _draw-node, _edge-label, _edge-label-beside, _mid, _bez, _ghost
 #import "layout.typ": _leaves, _weight, _sectors, _level-sizes
 
 // Star: every branch gets an angle, its box sits on a circle around the
@@ -49,8 +49,8 @@
 
   for i in range(n) {
     let (a, d, t) = (angles.at(i), dirs.at(i), trees.at(i))
-    if t.at("hidden", default: false) { continue }
     let (px, py) = inner(i, r)
+    if t.at("hidden", default: false) { _ghost(t, px, -py, d, opts, false); continue }
     let st = _stroke(0, t.color, opts)
     if calc.abs(calc.cos(a)) < 0.2 and opts.theme.edge == "curve" {
       // Branch almost straight above or below the root: the edge arrives at
@@ -133,6 +133,13 @@
   }
   let shown = placed.filter(t => not t.at("hidden", default: false))
   for t in shown { draw(t, (0pt, 0pt), t.angle) }
+  // Hidden branches keep their room, as in the other layouts.
+  let ghosts(t) = {
+    let (x, y) = pos(t, f)
+    cetz.draw.rect((x - t.w / 2, y - t.h / 2), (x + t.w / 2, y + t.h / 2), stroke: none, fill: none)
+    for k in t.kids { ghosts(k) }
+  }
+  for t in placed.filter(t => t.at("hidden", default: false)) { ghosts(t) }
   let boxes(t) = {
     let (x, y) = pos(t, f)
     _draw-node(t, x, y, opts)
@@ -180,11 +187,15 @@
   _seg((x-end, 0pt), (-rm.w / 2, 0pt), _stroke(0, opts.ink-dark, opts), opts)
   for (j, p) in pairs.enumerate() {
     for (i, t) in p.enumerate() {
-      if t.at("hidden", default: false) { continue }
       let side = if i == 0 { 1 } else { -1 }
       let l = cols.at(j).at(i).len
       let sx = xs.at(j)
       let tip = (sx - l * calc.cos(lean), side * l * calc.sin(lean))
+      if t.at("hidden", default: false) {
+        // Room kept, nothing drawn.
+        cetz.draw.rect((sx - cols.at(j).at(i).left, 0pt), (sx, tip.at(1) + side * t.h), stroke: none, fill: none)
+        continue
+      }
       _seg((sx, 0pt), tip, _stroke(0, t.color, opts), opts)
       // Leaves along the rib, a tick to the left of it.
       for (k, kid) in t.kids.enumerate() {
