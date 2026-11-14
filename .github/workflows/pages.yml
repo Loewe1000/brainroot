@@ -3,6 +3,8 @@ name: Handbuch veröffentlichen
 on:
   push:
     branches: [main]
+    # Ein neuer Versions-Tag bringt sein eigenes Handbuch unter /<tag>/ mit.
+    tags: ["v*"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -31,6 +33,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Die Wurzel der Seite zeigt immer `main`, auch wenn ein Tag den Lauf
+          # ausloest. Die ganze Geschichte samt Tags wird fuer die
+          # versionierten Handbuecher gebraucht.
+          ref: ${{ startsWith(github.ref, 'refs/tags/') && 'main' || '' }}
+          fetch-depth: 0
 
       - name: Typst-Schule danebenlegen
         uses: actions/checkout@v4
@@ -55,21 +63,39 @@ jobs:
           AGGREGAT: ${{ github.workspace }}/.aggregat
         run: bash .github/scripts/build-site.sh
 
+      - name: Versionierte Handbuecher bauen
+        # Jeder Tag v* bekommt sein Handbuch unter /<tag>/, gebaut mit dem
+        # Skript aus genau diesem Tag. So bleibt z. B. der Link im README von
+        # @preview/brainroot:0.2.0 auf /v0.2.0/ stehen, auch wenn spaetere
+        # Versionen erscheinen.
+        env:
+          AGGREGAT: ${{ github.workspace }}/.aggregat
+        run: |
+          for tag in $(git tag -l 'v*'); do
+            echo "=== Handbuch fuer $tag ==="
+            wt="$RUNNER_TEMP/brainroot-$tag"
+            git worktree add --detach "$wt" "$tag"
+            bash "$wt/.github/scripts/build-site.sh"
+            mkdir -p "_site/$tag"
+            cp -R "$wt/_site/." "_site/$tag/"
+            git worktree remove --force "$wt"
+          done
+
       - name: GitHub Pages konfigurieren
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push'
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Pages-Artefakt hochladen
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site/
 
   deploy:
     name: Auf GitHub Pages deployen
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
 
